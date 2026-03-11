@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.4">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="th"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Personal Portfolio&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* ตั้งค่าสีและฟอนต์สไตล์ Apple */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>:root {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--bg-color: #000000;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--text-main: #f5f5f7;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--text-muted: #86868b;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>* {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-sizing: border-box;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--bg-color);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--text-main);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>/* ใช้ System Font ของระบบ (จะดึงฟอนต์ San Francisco บนอุปกรณ์ Apple มาใช้) */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>-webkit-font-smoothing: antialiased;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>overflow-x: hidden;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* เมนูด้านบนแบบโปร่งแสง */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>nav {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(0, 0, 0, 0.7);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>backdrop-filter: blur(15px); /* เอฟเฟกต์เบลอพื้นหลัง */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>position: fixed;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>top: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>z-index: 100;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>nav a {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--text-main);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>text-decoration: none;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: 12px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 400;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: 0.5px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin: 0 20px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0.8;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: opacity 0.3s;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>nav a:hover { opacity: 1; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* จัดหน้าแต่ละส่วนให้อยู่ตรงกลาง */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>section {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 100vh;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h1 {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: clamp(40px, 6vw, 64px); /* ปรับขนาดตัวหนังสือตามหน้าจอ */</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 600;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>letter-spacing: -0.015em;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 15px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>p {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-size: clamp(18px, 3vw, 24px);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--text-muted);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>max-width: 600px;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 400;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.4;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* คลาสสำหรับทำแอนิเมชันเลื่อนจอ */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.fade-in {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 0;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(40px);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: opacity 1.2s ease-out, transform 1.2s ease-out;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.fade-in.visible {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>opacity: 1;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(0);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;nav&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;a href="#home"&gt;Home&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;a href="#about"&gt;About&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;a href="#projects"&gt;Projects&lt;/a&gt;</p>
+<p class="p1">&lt;/nav&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;section id="home"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="fade-in"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h1&gt;Hello, I'm Mean.&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p&gt;ยินดีต้อนรับสู่พื้นที่ส่วนตัวของผม เรียบง่าย รวดเร็ว และทำงานบนโฮมเซิร์ฟเวอร์&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;section id="about"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="fade-in"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;h1&gt;Design meets technology.&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;p&gt;หลงใหลในการถ่ายภาพ เทคโนโลยี และการสร้างสรรค์สิ่งใหม่ๆ&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/section&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const observer = new IntersectionObserver((entries) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>entries.forEach(entry =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>if (entry.isIntersecting) {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>entry.target.classList.add('visible');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}, { threshold: 0.15 });</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.querySelectorAll('.fade-in').forEach((el) =&gt; observer.observe(el));</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
