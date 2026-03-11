@@ -3,121 +3,720 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Portfolio</title>
+    <title>My Links | Portfolio</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* ตั้งค่าสีและฟอนต์สไตล์ Apple */
+        /* --- Apple Minimalist Theme --- */
         :root {
             --bg-color: #000000;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-hover: rgba(255, 255, 255, 0.1);
             --text-main: #f5f5f7;
             --text-muted: #86868b;
+            --accent: #2997ff; /* Apple Blue */
+            --accent-special: #ff9f0a; /* สีส้มสำหรับลิงก์พิเศษ */
+            --navbar-height: 60px;
         }
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
-            /* ใช้ System Font ของระบบ (จะดึงฟอนต์ San Francisco บนอุปกรณ์ Apple มาใช้) */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-        }
-        
-        /* เมนูด้านบนแบบโปร่งแสง */
-        nav {
-            display: flex;
-            justify-content: center;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(15px); /* เอฟเฟกต์เบลอพื้นหลัง */
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 100;
-        }
-        nav a {
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            margin: 0 20px;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-        }
-        nav a:hover { opacity: 1; }
-
-        /* จัดหน้าแต่ละส่วนให้อยู่ตรงกลาง */
-        section {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            padding-top: calc(var(--navbar-height) + 40px);
+            padding-bottom: 60px;
+            overflow-x: hidden;
+        }
+
+        /* --- Navbar (Glassmorphism) --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--navbar-height);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 20px; }
+        
+        .nav-logo {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .menu-link {
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 400;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+        }
+        .menu-link:hover, .menu-link.active { color: var(--text-main); }
+
+        /* Dropdown แบบมินิมอล */
+        .dropdown { position: relative; }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: calc(100% + 15px);
+            left: 0;
+            background: rgba(28, 28, 30, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            min-width: 180px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            z-index: 1001;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .dropdown-content.show {
+            display: block;
+            animation: fadeInDrop 0.2s ease;
+        }
+        @keyframes fadeInDrop { 
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); } 
+            to { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+        .dropdown-content a {
+            color: var(--text-main);
+            padding: 12px 18px;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }
+        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content a:hover { background: rgba(255,255,255,0.1); }
+
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        .nav-clock {
+            font-variant-numeric: tabular-nums;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .nav-user-container { cursor: pointer; display: flex; align-items: center; }
+        .nav-profile-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: 0.3s;
+        }
+
+        /* --- Profile Section --- */
+        .profile-section {
             text-align: center;
-            padding: 20px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 600px;
+            padding: 0 20px;
+        }
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
         }
         h1 {
-            font-size: clamp(40px, 6vw, 64px); /* ปรับขนาดตัวหนังสือตามหน้าจอ */
+            font-size: clamp(24px, 5vw, 32px);
             font-weight: 600;
             letter-spacing: -0.015em;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
-        p {
-            font-size: clamp(18px, 3vw, 24px);
+        p.bio {
+            font-size: 1rem;
             color: var(--text-muted);
-            max-width: 600px;
             font-weight: 400;
             line-height: 1.4;
         }
 
-        /* คลาสสำหรับทำแอนิเมชันเลื่อนจอ */
+        /* --- Search Bar --- */
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 0 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 45px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--card-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-input:focus {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.05);
+        }
+        .search-icon {
+            position: absolute;
+            left: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* --- Video --- */
+        .video-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 0 20px;
+            margin-bottom: 30px;
+            display: none;
+        }
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: #111;
+        }
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- Links Container --- */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 0 20px 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .link-card {
+            background: var(--card-bg);
+            padding: 18px 20px;
+            border-radius: 18px;
+            text-decoration: none;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.2s;
+            cursor: pointer;
+        }
+        .link-card:hover { background: var(--card-hover); }
+        .link-card:active { transform: scale(0.97); }
+        
+        /* สไตล์สำหรับลิงก์ที่มีรหัสผ่าน */
+        .link-card.special-access {
+            background: rgba(255, 159, 10, 0.1);
+            border-color: rgba(255, 159, 10, 0.2);
+        }
+        
+        .group-divider {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 15px 0 5px 10px;
+            font-weight: 500;
+        }
+
+        .link-icon {
+            font-size: 1.4rem;
+            margin-right: 15px;
+            width: 30px;
+            text-align: center;
+        }
+        .link-text {
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+        .badge {
+            margin-left: auto;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .badge-vip {
+            background: rgba(255, 159, 10, 0.2);
+            color: var(--accent-special);
+        }
+
+        /* --- Unlock Button --- */
+        .unlock-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(28, 28, 30, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-muted);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            z-index: 100;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-size: 1.2rem;
+        }
+        .unlock-btn:hover { background: rgba(50, 50, 55, 0.9); color: var(--text-main); transform: scale(1.05); }
+        .unlock-btn.active { color: var(--accent-special); border-color: rgba(255, 159, 10, 0.3); }
+
+        /* Admin Link */
+        .admin-link { 
+            margin-top: 20px; 
+            color: var(--text-muted); 
+            text-decoration: none; 
+            font-size: 0.85rem; 
+            display: flex; align-items: center; gap: 6px;
+            transition: 0.3s;
+        }
+        .admin-link:hover { color: var(--text-main); }
+
+        /* --- Modal About --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: rgba(28, 28, 30, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: modalZoom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalZoom { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: 0.2s;
+        }
+        .close-modal:hover { color: var(--text-main); }
+        .modal h2 { margin-top: 0; font-size: 1.4rem; margin-bottom: 15px; font-weight: 600; }
+        .modal p { color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; white-space: pre-wrap; }
+
+        /* --- Fade-in Animation Classes --- */
         .fade-in {
             opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 400px) {
+            .nav-logo span { display: none; } 
+            .unlock-btn { bottom: 20px; right: 20px; width: 45px; height: 45px; }
         }
     </style>
 </head>
 <body>
 
-<nav>
-    <a href="#home">Home</a>
-    <a href="#about">About</a>
-    <a href="#projects">Projects</a>
-</nav>
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="#" class="nav-logo">
+                <i class="fab fa-apple" style="font-size: 1.2rem;"></i>
+                <span>Portfolio</span>
+            </a>
+            
+            <div class="dropdown">
+                <div class="menu-link dropbtn" onclick="toggleDropdown()">
+                    Apps <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:2px;"></i>
+                </div>
+                <div class="dropdown-content" id="apps-dropdown-list"></div>
+            </div>
 
-<section id="home">
-    <div class="fade-in">
-        <h1>Hello, I'm Mean.</h1>
-        <p>ยินดีต้อนรับสู่พื้นที่ส่วนตัวของผม เรียบง่าย รวดเร็ว และทำงานบนโฮมเซิร์ฟเวอร์</p>
+            <div class="menu-link" onclick="openAbout()">About</div>
+        </div>
+        
+        <div class="nav-right">
+            <div class="nav-clock" id="nav-clock">00:00</div>
+            <div class="nav-user-container" onclick="window.location.href='admin.html'">
+                <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
+            </div>
+        </div>
+    </nav>
+
+    <div class="profile-section fade-in" id="profile-section">
+        <img src="" class="profile-img" id="main-profile-img" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
+        <h1 id="profile-name">...</h1>
+        <p class="bio" id="profile-bio">...</p>
     </div>
-</section>
 
-<section id="about">
-    <div class="fade-in">
-        <h1>Design meets technology.</h1>
-        <p>หลงใหลในการถ่ายภาพ เทคโนโลยี และการสร้างสรรค์สิ่งใหม่ๆ</p>
+    <div class="search-container fade-in">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="search-input" class="search-input" placeholder="Search links..." onkeyup="searchLinks()">
     </div>
-</section>
 
-<script>
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
+    <div class="video-container fade-in" id="featured-video">
+        <div class="video-wrapper">
+            <iframe id="youtube-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <div class="container" id="links-container">
+        <div style="text-align: center; color: var(--text-muted); margin-top: 20px;">Loading...</div>
+    </div>
+
+    <a href="admin.html" class="admin-link fade-in">
+        <i class="fas fa-cog"></i> Manage
+    </a>
+
+    <div id="about-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAbout()">&times;</span>
+            <h2>About</h2>
+            <p id="modal-text">...</p>
+        </div>
+    </div>
+
+    <button class="unlock-btn" id="unlockBtn" onclick="handleUnlock()">
+        <i class="fas fa-lock"></i>
+    </button>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script>
+        // ⚠️ Config Firebase ของคุณ (ไม่มีการเปลี่ยนแปลง)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-Brx6cQ7dFhQqbEhDG4xIT4jcVG1yogs",
+            authDomain: "mylinks-web.firebaseapp.com",
+            projectId: "mylinks-web",
+            storageBucket: "mylinks-web.firebasestorage.app",
+            messagingSenderId: "702413304222",
+            appId: "1:702413304222:web:d255e6c2f428bb1e1d668f",
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let currentAccessGroup = 'public';
+        let accessRules = {};
+        let adminProfileImage = '';
+        let userImagesMap = {};
+        let aboutTextContent = '';
+        let globalAllLinks = [];
+
+        // --- ระบบแอนิเมชันตอนเลื่อนจอ ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        // สั่งให้กล่องหลักๆ เริ่มทำงานแอนิเมชัน
+        document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+
+        // --- Dropdown ---
+        function toggleDropdown() {
+            document.getElementById("apps-dropdown-list").classList.toggle("show");
+            document.querySelector(".dropbtn").classList.toggle("active");
+        }
+        window.onclick = function(event) {
+            if (!event.target.closest('.dropdown')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                document.querySelector(".dropbtn").classList.remove("active");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
+                }
             }
+        }
+
+        // --- Modal About ---
+        function openAbout() {
+            document.getElementById('modal-text').innerText = aboutTextContent || "No information provided.";
+            document.getElementById('about-modal').style.display = "flex";
+        }
+        function closeAbout() {
+            document.getElementById('about-modal').style.display = "none";
+        }
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('about-modal');
+            if (event.target == modal) modal.style.display = "none";
         });
-    }, { threshold: 0.15 });
 
-    document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
-</script>
+        // --- Search ---
+        function searchLinks() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            const filtered = globalAllLinks.filter(link => link.title.toLowerCase().includes(term));
+            renderLinks(filtered);
+        }
 
+        // --- Clock ---
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('nav-clock').innerText = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- Load Data จาก Firebase ---
+        function loadData() {
+            db.doc("settings/profile").get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    renderProfile(data);
+                    renderVideo(data.featuredVideo);
+                    adminProfileImage = data.navbarAdminImage;
+                    aboutTextContent = data.aboutText;
+                    
+                    if (data.appsConfig) renderAppsMenu(data.appsConfig);
+                    else document.getElementById('apps-dropdown-list').innerHTML = '<a href="#" style="color:var(--text-muted);">No Apps</a>';
+
+                    if (data.userImagesConfig) {
+                        data.userImagesConfig.split('\n').forEach(line => {
+                            const splitIndex = line.indexOf(':');
+                            if (splitIndex > 0) {
+                                const key = line.substring(0, splitIndex).trim();
+                                const url = line.substring(splitIndex + 1).trim();
+                                if(key && url) userImagesMap[key] = url;
+                            }
+                        });
+                    }
+
+                    if (data.accessConfig) {
+                        data.accessConfig.split('\n').forEach(line => {
+                            const [code, group] = line.split(':');
+                            if(code && group) accessRules[code.trim()] = group.trim();
+                        });
+                    }
+                    checkAuthStatus();
+                }
+            });
+
+            db.collection("links").orderBy("order", "asc").get().then((snapshot) => {
+                globalAllLinks = [];
+                snapshot.forEach(doc => globalAllLinks.push(doc.data()));
+                renderLinks(globalAllLinks);
+            });
+        }
+
+        // --- เรนเดอร์ลิงก์ ---
+        function renderLinks(linksData) {
+            const container = document.getElementById('links-container');
+            container.innerHTML = ''; 
+
+            if(linksData.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">No links found</p>';
+                return;
+            }
+
+            const visibleLinks = linksData.filter(link => {
+                const groupString = link.group || 'public';
+                const allowedGroups = groupString.split(',').map(g => g.trim());
+                return allowedGroups.includes('public') || allowedGroups.includes(currentAccessGroup);
+            });
+
+            const specialLinks = visibleLinks.filter(link => {
+                const groupString = link.group || 'public';
+                const allowedGroups = groupString.split(',').map(g => g.trim());
+                return !allowedGroups.includes('public') && allowedGroups.includes(currentAccessGroup);
+            });
+            
+            const publicLinks = visibleLinks.filter(link => {
+                    const groupString = link.group || 'public';
+                    return groupString.includes('public');
+            });
+
+            if (specialLinks.length > 0) {
+                container.innerHTML += `<div class="group-divider fade-in">Unlocked: ${currentAccessGroup}</div>`;
+                specialLinks.forEach(link => renderLinkItem(container, link, true));
+            }
+            if (publicLinks.length > 0) {
+                if (specialLinks.length > 0) container.innerHTML += `<div class="group-divider fade-in" style="margin-top: 25px;">Public Links</div>`;
+                publicLinks.forEach(link => renderLinkItem(container, link, false));
+            }
+
+            // สั่งให้การ์ดลิงก์ที่เพิ่งสร้างใหม่ มีเอฟเฟกต์ fade-in
+            document.querySelectorAll('#links-container .fade-in').forEach((el) => observer.observe(el));
+        }
+
+        function renderAppsMenu(configStr) {
+            const menuContainer = document.getElementById('apps-dropdown-list');
+            menuContainer.innerHTML = ''; 
+            configStr.split('\n').forEach(line => {
+                const parts = line.split('|');
+                if(parts.length >= 2) {
+                    const name = parts[0].trim();
+                    const url = parts[1].trim();
+                    menuContainer.innerHTML += `<a href="${url}" target="_blank">${name}</a>`;
+                }
+            });
+        }
+
+        function checkAuthStatus() { const user = auth.currentUser; updateNavbarUI(user); }
+        auth.onAuthStateChanged((user) => { updateNavbarUI(user); });
+
+        function updateNavbarUI(user) {
+            const navImg = document.getElementById('nav-profile-img');
+            let imgSrc = "https://ui-avatars.com/api/?name=Guest&background=random"; 
+
+            if (user) {
+                if (userImagesMap[user.email]) { imgSrc = userImagesMap[user.email]; } 
+                else if (adminProfileImage) { imgSrc = adminProfileImage; } 
+                else { imgSrc = user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=random`; }
+                navImg.style.borderColor = "rgba(255,255,255,0.4)";
+            } else {
+                if (currentAccessGroup !== 'public' && userImagesMap[currentAccessGroup]) {
+                    imgSrc = userImagesMap[currentAccessGroup];
+                    navImg.style.borderColor = "var(--accent-special)";
+                } else {
+                    imgSrc = "https://cdn-icons-png.flaticon.com/512/149/149071.png"; 
+                    navImg.style.borderColor = "rgba(255,255,255,0.1)";
+                }
+            }
+            navImg.src = imgSrc;
+        }
+
+        function renderProfile(data) {
+            const mainImg = document.getElementById('main-profile-img');
+            mainImg.src = data.imageUrl || 'https://ui-avatars.com/api/?name=User&background=random';
+            document.getElementById('profile-name').innerText = data.name || 'My Links';
+            document.getElementById('profile-bio').innerText = data.bio || '';
+        }
+
+        function renderVideo(url) {
+            const videoContainer = document.getElementById('featured-video');
+            const iframe = document.getElementById('youtube-iframe');
+            if (url) {
+                const videoId = extractVideoID(url);
+                if (videoId) {
+                    iframe.src = `https://www.youtube.com/embed/${videoId}`;
+                    videoContainer.style.display = 'block';
+                } else { videoContainer.style.display = 'none'; }
+            } else { videoContainer.style.display = 'none'; }
+        }
+
+        function extractVideoID(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function renderLinkItem(container, link, isSpecial) {
+            const iconClass = link.icon || 'fas fa-link';
+            const specialClass = isSpecial ? 'special-access' : '';
+            const badge = isSpecial ? `<span class="badge badge-vip"><i class="fas fa-unlock-alt" style="margin-right:4px;"></i>${currentAccessGroup}</span>` : '';
+            
+            // ใช้สีไอคอนตามแบรนด์เฉพาะบางตัว นอกนั้นให้เป็นสีขาว/เทา
+            let iconColorStyle = '';
+            if(iconClass.includes('facebook')) iconColorStyle = 'color: #1877F2;';
+            else if(iconClass.includes('youtube')) iconColorStyle = 'color: #FF0000;';
+            else if(iconClass.includes('instagram')) iconColorStyle = 'color: #E4405F;';
+            else if(iconClass.includes('line')) iconColorStyle = 'color: #00C300;';
+            else if(iconClass.includes('tiktok')) iconColorStyle = 'color: #ffffff; text-shadow: 1px 1px 0 #00f2ea, -1px -1px 0 #ff0050;';
+
+            const html = `
+                <a href="${link.url}" target="_blank" class="link-card fade-in ${specialClass}">
+                    <div class="link-icon"><i class="${iconClass}" style="${iconColorStyle}"></i></div>
+                    <div class="link-text">${link.title}</div>
+                    ${badge}
+                </a>
+            `;
+            container.innerHTML += html;
+        }
+
+        function handleUnlock() {
+            if (currentAccessGroup !== 'public') {
+                currentAccessGroup = 'public';
+                alert("🔒 ล็อคระบบแล้ว (Locked)");
+                document.getElementById('unlockBtn').classList.remove('active');
+                document.getElementById('unlockBtn').innerHTML = '<i class="fas fa-lock"></i>';
+                updateNavbarUI(null);
+                renderLinks(globalAllLinks); 
+            } else {
+                const input = prompt("🔑 กรุณาใส่รหัสผ่านเข้าถึง (Enter Passcode):");
+                if (input && accessRules[input]) {
+                    currentAccessGroup = accessRules[input];
+                    document.getElementById('unlockBtn').classList.add('active');
+                    document.getElementById('unlockBtn').innerHTML = '<i class="fas fa-unlock"></i>';
+                    updateNavbarUI(null);
+                    renderLinks(globalAllLinks); 
+                } else if (input) {
+                    alert("❌ รหัสไม่ถูกต้อง (Incorrect Passcode)");
+                }
+            }
+        }
+
+        // เริ่มต้นโหลดข้อมูล
+        loadData();
+    </script>
 </body>
 </html>
