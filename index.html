@@ -102,6 +102,23 @@
         .dropdown-content a:hover { background: rgba(255,255,255,0.1); padding-left: 25px; color: var(--accent); }
 
         .nav-right { display: flex; align-items: center; gap: 18px; }
+        
+        /* --- System Status Indicator --- */
+        .status-indicator {
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+        }
+        .status-indicator:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 8px currentColor; transition: 0.3s; }
+        .status-dot.checking { background-color: #ffcc00; color: #ffcc00; animation: blink 1s infinite; }
+        .status-dot.ok { background-color: #34c759; color: #34c759; box-shadow: 0 0 10px rgba(52,199,89,0.5); }
+        .status-dot.error { background-color: #ff3b30; color: #ff3b30; box-shadow: 0 0 10px rgba(255,59,48,0.5); }
+        
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
         .nav-clock { font-variant-numeric: tabular-nums; font-size: 0.9rem; color: var(--text-muted); font-weight: 600; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
         .nav-user-container { cursor: pointer; display: flex; align-items: center; }
         .nav-profile-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
@@ -199,7 +216,7 @@
         .unlock-btn:hover { background: rgba(40, 40, 45, 0.9); color: var(--text-main); transform: scale(1.1) translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
         .unlock-btn.active { color: var(--accent-special); border-color: rgba(255, 159, 10, 0.4); box-shadow: 0 0 20px rgba(255, 159, 10, 0.3); }
 
-        /* --- Modal --- */
+        /* --- Modals --- */
         .modal {
             display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -216,15 +233,25 @@
         .modal h2 { margin-top: 0; font-size: 1.5rem; margin-bottom: 15px; font-weight: 700; background: linear-gradient(90deg, #fff, #86868b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .modal p { color: var(--text-muted); line-height: 1.7; font-size: 1rem; white-space: pre-wrap; }
 
+        /* --- Status Modal List --- */
+        .status-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .status-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); 
+            color: var(--text-main); font-size: 0.95rem; 
+        }
+        .status-item:last-child { border-bottom: none; }
+        .status-badge { 
+            padding: 5px 12px; border-radius: 12px; font-size: 0.75rem; 
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; 
+        }
+        .status-badge.status-ok { background: rgba(52, 199, 89, 0.15); color: #34c759; border: 1px solid rgba(52,199,89,0.3); }
+        .status-badge.status-error { background: rgba(255, 59, 48, 0.15); color: #ff3b30; border: 1px solid rgba(255,59,48,0.3); }
+        .status-badge.status-checking { background: rgba(255, 204, 0, 0.15); color: #ffcc00; border: 1px solid rgba(255,204,0,0.3); }
+
         /* Animations */
         .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .fade-in.visible { opacity: 1; transform: translateY(0); }
-
-        @media (max-width: 400px) {
-            .nav-logo span { display: none; } 
-            .unlock-btn { bottom: 25px; right: 25px; width: 50px; height: 50px; }
-            h1 { font-size: 24px; }
-        }
 
         .loader {
             border: 3px solid rgba(255,255,255,0.05); border-radius: 50%;
@@ -233,6 +260,13 @@
             box-shadow: 0 0 20px var(--accent-glow);
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 500px) {
+            .status-text { display: none; } /* ซ่อนข้อความสถานะในมือถือให้เหลือแต่จุด */
+            .nav-logo span { display: none; } 
+            .unlock-btn { bottom: 25px; right: 25px; width: 50px; height: 50px; }
+            h1 { font-size: 24px; }
+        }
     </style>
 </head>
 <body>
@@ -255,6 +289,11 @@
         </div>
         
         <div class="nav-right">
+            <div class="status-indicator" onclick="openStatus()">
+                <div class="status-dot checking" id="nav-status-dot"></div>
+                <div class="status-text" id="nav-status-text">Checking...</div>
+            </div>
+
             <div class="nav-clock" id="nav-clock">00:00</div>
             <div class="nav-user-container">
                 <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
@@ -292,24 +331,92 @@
         </div>
     </div>
 
+    <div id="status-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeStatus()">&times;</span>
+            <h2><i class="fas fa-server" style="margin-right: 10px; font-size: 1.2rem;"></i>System Status</h2>
+            <div class="status-list">
+                <div class="status-item">
+                    <span><i class="fas fa-globe" style="margin-right:8px; color:var(--text-muted);"></i>Web Interface</span>
+                    <span class="status-badge status-ok">Operational</span>
+                </div>
+                <div class="status-item">
+                    <span><i class="fas fa-database" style="margin-right:8px; color:var(--text-muted);"></i>Database (API)</span>
+                    <span class="status-badge status-checking" id="badge-api">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span><i class="fas fa-photo-video" style="margin-right:8px; color:var(--text-muted);"></i>Media Components</span>
+                    <span class="status-badge status-checking" id="badge-media">Checking...</span>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; margin-top: 20px; text-align: center; opacity: 0.7;">
+                Auto-updates every time the page loads.
+            </p>
+        </div>
+    </div>
+
     <button class="unlock-btn" id="unlockBtn" onclick="handleUnlock()">
         <i class="fas fa-lock"></i>
     </button>
 
     <script>
-        // ใช้ Google Apps Script API ของคุณมีนเหมือนเดิมเป๊ะๆ ครับ
         const API_URL = "https://script.google.com/macros/s/AKfycbzXB_CssFkIeViXfeLq1Ap9a2Q_WvNx29bbRxYKm8UVszGNRg47gPP9lT6sHkpxFfMjsA/exec";
 
         let currentAccessGroup = 'public';
         let accessRules = {};
         let aboutTextContent = '';
         let globalAllLinks = [];
+        let systemStatus = { api: 'checking', media: 'checking' }; // สถานะเริ่มต้น
 
-        // ระบบ Intersection Observer สั่งเล่น Effect
+        // --- System Status Controllers ---
+        function updateSystemStatus(component, status) {
+            systemStatus[component] = status;
+            renderOverallStatus();
+        }
+
+        function renderOverallStatus() {
+            const dot = document.getElementById('nav-status-dot');
+            const text = document.getElementById('nav-status-text');
+            const badgeApi = document.getElementById('badge-api');
+            const badgeMedia = document.getElementById('badge-media');
+
+            // อัปเดตป้ายใน Modal
+            updateBadge(badgeApi, systemStatus.api);
+            updateBadge(badgeMedia, systemStatus.media);
+
+            // คำนวณสถานะรวมของเว็บ
+            if (systemStatus.api === 'error' || systemStatus.media === 'error') {
+                dot.className = 'status-dot error';
+                text.innerText = 'System Issue';
+                text.style.color = '#ff3b30';
+            } else if (systemStatus.api === 'checking' || systemStatus.media === 'checking') {
+                dot.className = 'status-dot checking';
+                text.innerText = 'Checking...';
+                text.style.color = '#ffcc00';
+            } else {
+                dot.className = 'status-dot ok';
+                text.innerText = 'All Systems Normal';
+                text.style.color = '#34c759';
+            }
+        }
+
+        function updateBadge(element, status) {
+            if (status === 'ok') {
+                element.className = 'status-badge status-ok';
+                element.innerText = 'Operational';
+            } else if (status === 'error') {
+                element.className = 'status-badge status-error';
+                element.innerText = 'Outage';
+            } else {
+                element.className = 'status-badge status-checking';
+                element.innerText = 'Checking...';
+            }
+        }
+
+        // --- Intersection Observer (Animation) ---
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, index) => { 
                 if (entry.isIntersecting) {
-                    // หน่วงเวลาให้การ์ดค่อยๆ เด้งขึ้นมาทีละอัน
                     setTimeout(() => {
                         entry.target.classList.add('visible');
                     }, index * 80); 
@@ -319,29 +426,37 @@
         
         document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
 
+        // --- UI Interactions ---
         function toggleDropdown() {
             document.getElementById("apps-dropdown-list").classList.toggle("show");
             document.querySelector(".dropbtn").classList.toggle("active");
         }
-        window.onclick = function(event) {
-            if (!event.target.closest('.dropdown')) {
-                var dropdowns = document.getElementsByClassName("dropdown-content");
-                document.querySelector(".dropbtn").classList.remove("active");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
-                }
-            }
-        }
-
+        
         function openAbout() {
             document.getElementById('modal-text').innerText = aboutTextContent || "No information provided.";
             document.getElementById('about-modal').style.display = "flex";
         }
         function closeAbout() { document.getElementById('about-modal').style.display = "none"; }
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('about-modal');
-            if (event.target == modal) modal.style.display = "none";
-        });
+        
+        function openStatus() { document.getElementById('status-modal').style.display = "flex"; }
+        function closeStatus() { document.getElementById('status-modal').style.display = "none"; }
+
+        // ปิด Dropdown หรือ Modal เมื่อคลิกพื้นที่ว่าง
+        window.onclick = function(event) {
+            if (!event.target.closest('.dropdown') && !event.target.classList.contains('dropbtn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                var btn = document.querySelector(".dropbtn");
+                if(btn) btn.classList.remove("active");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
+                }
+            }
+            
+            const aboutModal = document.getElementById('about-modal');
+            const statusModal = document.getElementById('status-modal');
+            if (event.target == aboutModal) aboutModal.style.display = "none";
+            if (event.target == statusModal) statusModal.style.display = "none";
+        }
 
         function searchLinks() {
             const term = document.getElementById('search-input').value.toLowerCase();
@@ -356,11 +471,16 @@
         }
         setInterval(updateClock, 1000); updateClock();
 
-        // โหลดข้อมูลจาก Google Sheets
+        // --- Fetch Data ---
         async function loadData() {
             try {
                 const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network Issue');
                 const data = await response.json();
+
+                // ถ้าโหลดผ่าน อัปเดตสถานะเป็น OK
+                updateSystemStatus('api', 'ok');
+                updateSystemStatus('media', 'ok');
 
                 if(data.profile) {
                     document.getElementById('profile-name').innerText = data.profile.name || 'My Portfolio';
@@ -389,10 +509,21 @@
 
             } catch (error) {
                 console.error("Error loading data:", error);
-                document.getElementById('links-container').innerHTML = '<p style="text-align:center; color: #ff453a; font-weight:600;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
+                
+                // ถ้ามีปัญหา อัปเดตสถานะเป็น Error
+                updateSystemStatus('api', 'error');
+                updateSystemStatus('media', 'error');
+                
+                document.getElementById('links-container').innerHTML = `
+                    <div style="text-align:center; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); padding: 20px; border-radius: 20px; color: #ff3b30; margin-top: 10px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px;"></i>
+                        <h3 style="margin-bottom: 5px;">Connection Failed</h3>
+                        <p style="font-size: 0.9rem; opacity: 0.8;">เกิดข้อผิดพลาดในการโหลดข้อมูลจาก Database หรือ Google Sheets อาจมีปัญหา</p>
+                    </div>`;
             }
         }
 
+        // --- Render Functions ---
         function renderLinks(linksData) {
             const container = document.getElementById('links-container');
             container.innerHTML = ''; 
@@ -428,7 +559,6 @@
                 publicLinks.forEach(link => renderLinkItem(container, link, false));
             }
 
-            // สั่งออฟเซิร์ฟเอฟเฟกต์เฟดอีกรอบหลังจากปั้น HTML เสร็จ
             document.querySelectorAll('#links-container .fade-in').forEach((el) => observer.observe(el));
             updateNavbarImage();
         }
@@ -452,7 +582,6 @@
             const specialClass = isSpecial ? 'special-access' : '';
             const badge = isSpecial ? `<span class="badge badge-vip"><i class="fas fa-unlock-alt" style="margin-right:6px;"></i>${currentAccessGroup}</span>` : '';
             
-            // จับคู่สีไอคอนยอดฮิต
             let iconColorStyle = '';
             const iconLower = iconClass.toLowerCase();
             if(iconLower.includes('facebook')) iconColorStyle = 'color: #1877F2; text-shadow: 0 0 10px rgba(24,119,242,0.5);';
@@ -506,7 +635,8 @@
             }
         }
 
-        // เริ่มต้นทำงาน
+        // --- Init ---
+        renderOverallStatus(); // แสดงสถานะ Checking ตั้งแต่โหลดหน้า
         loadData();
     </script>
 </body>
