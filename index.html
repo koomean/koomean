@@ -8,73 +8,32 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
-            --bg-color: #050505;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --card-hover: rgba(255, 255, 255, 0.08);
-            --text-main: #f5f5f7;
-            --text-muted: #86868b;
-            --accent: #2997ff;
-            --accent-glow: rgba(41, 151, 255, 0.4);
-            --accent-special: #ff9f0a;
-            --navbar-height: 70px;
+            --bg-color: #050505; --card-bg: rgba(255, 255, 255, 0.03); --card-hover: rgba(255, 255, 255, 0.08);
+            --text-main: #f5f5f7; --text-muted: #86868b; --accent: #2997ff; --accent-glow: rgba(41, 151, 255, 0.4);
+            --accent-special: #ff9f0a; --navbar-height: 70px;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: calc(var(--navbar-height) + 40px);
-            padding-bottom: 80px;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* --- พื้นหลังเคลื่อนไหว --- */
-        body::before, body::after {
-            content: ''; position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: 0.5;
-            animation: floatOrb 20s infinite alternate ease-in-out;
-        }
+        body { background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding-top: calc(var(--navbar-height) + 40px); padding-bottom: 80px; overflow-x: hidden; position: relative; }
+        body::before, body::after { content: ''; position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: 0.5; animation: floatOrb 20s infinite alternate ease-in-out; }
         body::before { width: 400px; height: 400px; background: var(--accent-glow); top: -100px; left: -100px; }
         body::after { width: 500px; height: 500px; background: rgba(255, 159, 10, 0.15); bottom: -150px; right: -150px; animation-delay: -10s; }
         @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(100px, 50px) scale(1.2); } }
 
-        /* --- Navbar --- */
-        .navbar {
-            position: fixed; top: 0; left: 0; width: 100%; height: var(--navbar-height);
-            background: rgba(10, 10, 12, 0.6); backdrop-filter: saturate(180%) blur(25px); -webkit-backdrop-filter: saturate(180%) blur(25px);
-            display: flex; justify-content: space-between; align-items: center; padding: 0 25px; z-index: 1000; 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-        }
+        .navbar { position: fixed; top: 0; left: 0; width: 100%; height: var(--navbar-height); background: rgba(10, 10, 12, 0.6); backdrop-filter: saturate(180%) blur(25px); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); }
         .nav-left { display: flex; align-items: center; gap: 20px; }
         .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: transform 0.3s; }
         .nav-logo:hover { transform: scale(1.05); }
         .menu-link { color: var(--text-muted); cursor: pointer; font-size: 0.95rem; font-weight: 500; transition: color 0.3s, transform 0.2s; display: flex; align-items: center; gap: 6px; user-select: none; }
         .menu-link:hover, .menu-link.active { color: var(--text-main); transform: translateY(-2px); }
         .dropdown { position: relative; }
-        .dropdown-content {
-            display: none; position: absolute; top: calc(100% + 15px); left: 0;
-            background: rgba(20, 20, 22, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            min-width: 200px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; z-index: 1001; box-shadow: 0 15px 50px rgba(0,0,0,0.6);
-        }
+        .dropdown-content { display: none; position: absolute; top: calc(100% + 15px); left: 0; background: rgba(20, 20, 22, 0.85); backdrop-filter: blur(25px); min-width: 200px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; z-index: 1001; box-shadow: 0 15px 50px rgba(0,0,0,0.6); }
         .dropdown-content.show { display: block; animation: fadeInDrop 0.3s; }
         @keyframes fadeInDrop { from { opacity: 0; transform: translateY(-15px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .dropdown-content a { color: var(--text-main); padding: 14px 20px; text-decoration: none; display: block; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
         .dropdown-content a:hover { background: rgba(255,255,255,0.1); padding-left: 25px; color: var(--accent); }
         
         .nav-right { display: flex; align-items: center; gap: 18px; }
-        
-        /* --- System Status Indicator --- */
-        .status-indicator {
-            display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,0.05); 
-            padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
-        }
+        .status-indicator { display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; font-weight: 600; transition: all 0.3s; }
         .status-indicator:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; transition: 0.3s; }
         .status-dot.checking { background-color: #ffcc00; animation: blink 1s infinite; }
@@ -87,7 +46,6 @@
         .nav-profile-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); transition: all 0.3s; }
         .nav-profile-img:hover { transform: scale(1.1) rotate(5deg); border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
 
-        /* --- Profile Section --- */
         .profile-section { text-align: center; margin-bottom: 40px; width: 100%; max-width: 600px; padding: 0 20px; }
         .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; margin-bottom: 18px; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 0 20px var(--accent-glow); animation: profilePulse 3s infinite alternate; transition: transform 0.5s; }
         .profile-img:hover { transform: scale(1.05); }
@@ -95,7 +53,6 @@
         h1 { font-size: clamp(28px, 6vw, 36px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 10px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         p.bio { font-size: 1.05rem; color: var(--text-muted); font-weight: 400; line-height: 1.5; }
 
-        /* --- Search Bar & Video --- */
         .search-container { width: 100%; max-width: 600px; padding: 0 20px; margin-bottom: 35px; position: relative; }
         .search-input { width: 100%; padding: 16px 20px 16px 50px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); color: var(--text-main); font-size: 1.05rem; outline: none; transition: all 0.4s; }
         .search-input:focus { background: rgba(255,255,255,0.08); border-color: var(--accent); box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 0 3px rgba(41,151,255,0.2); transform: scale(1.02); }
@@ -105,14 +62,15 @@
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: #111; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
-        /* --- Links Container --- */
         .container { width: 100%; max-width: 600px; padding: 0 20px 40px 20px; display: flex; flex-direction: column; gap: 15px; }
-        .link-card { background: var(--card-bg); padding: 20px 25px; border-radius: 20px; text-decoration: none; color: var(--text-main); display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.06); transition: all 0.4s; cursor: pointer; position: relative; overflow: hidden; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
+        .link-card { background: var(--card-bg); padding: 20px 25px; border-radius: 20px; text-decoration: none; color: var(--text-main); display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.06); transition: all 0.4s; cursor: pointer; position: relative; overflow: hidden; backdrop-filter: blur(15px); }
         .link-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent); transform: skewX(-25deg); transition: 0.6s ease-in-out; }
         .link-card:hover::before { left: 150%; }
         .link-card:hover { background: var(--card-hover); transform: translateY(-6px) scale(1.015); border-color: rgba(255,255,255,0.15); box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(41, 151, 255, 0.15); }
         .link-card.special-access { background: rgba(255, 159, 10, 0.08); border-color: rgba(255, 159, 10, 0.2); }
         .link-card.special-access:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(255, 159, 10, 0.2); }
+        .link-card.admin-access { background: rgba(52, 199, 89, 0.08); border-color: rgba(52, 199, 89, 0.2); }
+        .link-card.admin-access:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(52, 199, 89, 0.2); }
         .group-divider { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 5px 10px; font-weight: 600; display: flex; align-items: center; }
         .group-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.05); margin-left: 15px; }
         .link-icon { font-size: 1.6rem; margin-right: 18px; width: 35px; text-align: center; transition: transform 0.3s; }
@@ -120,20 +78,15 @@
         .link-text { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; }
         .badge { margin-left: auto; font-size: 0.75rem; padding: 5px 12px; border-radius: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
         .badge-vip { background: linear-gradient(135deg, rgba(255, 159, 10, 0.2), rgba(255, 69, 58, 0.2)); color: var(--accent-special); border: 1px solid rgba(255, 159, 10, 0.3); }
+        .badge-admin { background: linear-gradient(135deg, rgba(52, 199, 89, 0.2), rgba(0, 153, 51, 0.2)); color: #34c759; border: 1px solid rgba(52, 199, 89, 0.3); }
 
-        /* --- Unlock / Login Button --- */
-        .unlock-btn {
-            position: fixed; bottom: 35px; right: 35px; background: rgba(20, 20, 22, 0.85); backdrop-filter: saturate(180%) blur(20px); 
-            -webkit-backdrop-filter: saturate(180%) blur(20px); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 50%; width: 55px; height: 55px; display: flex; justify-content: center; align-items: center;
-            transition: all 0.4s; z-index: 100; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.4); font-size: 1.3rem;
-        }
+        .unlock-btn { position: fixed; bottom: 35px; right: 35px; background: rgba(20, 20, 22, 0.85); backdrop-filter: saturate(180%) blur(20px); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; transition: all 0.4s; z-index: 100; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.4); font-size: 1.3rem; }
         .unlock-btn:hover { background: rgba(40, 40, 45, 0.9); color: var(--text-main); transform: scale(1.1) translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
         .unlock-btn.active { color: var(--accent-special); border-color: rgba(255, 159, 10, 0.4); box-shadow: 0 0 20px rgba(255, 159, 10, 0.3); }
+        .unlock-btn.admin-mode { color: #34c759; border-color: rgba(52, 199, 89, 0.4); box-shadow: 0 0 20px rgba(52, 199, 89, 0.3); }
 
-        /* --- Modals --- */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(15px); justify-content: center; align-items: center; padding: 20px; }
-        .modal-content { background: rgba(20, 20, 22, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; padding: 35px; width: 100%; max-width: 420px; text-align: left; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.7); animation: modalZoom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(15px); justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: rgba(20, 20, 22, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; padding: 35px; width: 100%; max-width: 420px; text-align: left; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.7); animation: modalZoom 0.4s; }
         @keyframes modalZoom { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
         .close-modal { position: absolute; top: 20px; right: 25px; color: var(--text-muted); cursor: pointer; font-size: 1.8rem; transition: 0.3s; }
         .close-modal:hover { color: var(--text-main); transform: rotate(90deg); }
@@ -148,16 +101,28 @@
         .status-badge.status-error { background: rgba(255, 59, 48, 0.15); color: #ff3b30; border: 1px solid rgba(255,59,48,0.3); }
         .status-badge.status-checking { background: rgba(255, 204, 0, 0.15); color: #ffcc00; border: 1px solid rgba(255,204,0,0.3); }
 
-        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s; }
         .fade-in.visible { opacity: 1; transform: translateY(0); }
         .loader { border: 3px solid rgba(255,255,255,0.05); border-radius: 50%; border-top: 3px solid var(--accent); width: 40px; height: 40px; animation: spin 1s infinite; margin: 30px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* --- Admin Dashboard CSS --- */
+        .admin-tab-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .admin-tab { background: none; border: none; color: var(--text-muted); font-size: 1rem; font-weight: 600; cursor: pointer; padding: 8px 15px; border-radius: 8px; transition: 0.3s; }
+        .admin-tab.active { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .admin-list { max-height: 350px; overflow-y: auto; padding-right: 10px; }
+        .admin-list::-webkit-scrollbar { width: 6px; }
+        .admin-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .admin-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .admin-item-title { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 5px; word-break: break-all;}
+        .admin-item-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+        .admin-select { background: rgba(0,0,0,0.5); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; outline: none; }
+        .admin-btn-save { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-left: 10px; transition: 0.3s; }
+        .admin-btn-save:hover { background: #1a75ff; transform: scale(1.05); }
+
         @media (max-width: 500px) {
-            .status-text { display: none; }
-            .nav-logo span { display: none; } 
+            .status-text { display: none; } .nav-logo span { display: none; } 
             .unlock-btn { bottom: 25px; right: 25px; width: 50px; height: 50px; }
-            h1 { font-size: 24px; }
         }
     </style>
 </head>
@@ -166,27 +131,19 @@
     <nav class="navbar">
         <div class="nav-left">
             <a href="#" class="nav-logo">
-                <span style="font-size: 1.3rem;">💻</span>
-                <span>Koo Mean SITE V.2</span>
+                <span style="font-size: 1.3rem;">💻</span><span>Koo Mean SITE V.2</span>
             </a>
-            
             <div class="dropdown">
-                <div class="menu-link dropbtn" onclick="toggleDropdown()">
-                    Apps <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i>
-                </div>
+                <div class="menu-link dropbtn" onclick="toggleDropdown()">Apps <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i></div>
                 <div class="dropdown-content" id="apps-dropdown-list"></div>
             </div>
             <div class="menu-link" onclick="openAbout()">About</div>
         </div>
-        
         <div class="nav-right">
-            <div class="status-indicator" onclick="openStatus()">
-                <div class="status-dot checking" id="nav-status-dot"></div>
-                <div class="status-text" id="nav-status-text">Checking...</div>
-            </div>
+            <div class="status-indicator" onclick="openStatus()"><div class="status-dot checking" id="nav-status-dot"></div><div class="status-text" id="nav-status-text">Checking...</div></div>
             <div class="nav-clock" id="nav-clock">00:00</div>
-            <div class="nav-user-container" onclick="handleAuthClick()">
-                <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
+            <div class="nav-user-container" onclick="handleProfileClick()">
+                <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
             </div>
         </div>
     </nav>
@@ -203,180 +160,166 @@
     </div>
 
     <div class="video-container fade-in" id="featured-video">
-        <div class="video-wrapper">
-            <iframe id="youtube-iframe" src="" frameborder="0" allowfullscreen></iframe>
-        </div>
+        <div class="video-wrapper"><iframe id="youtube-iframe" src="" frameborder="0" allowfullscreen></iframe></div>
     </div>
 
     <div class="container" id="links-container">
-        <div class="loader"></div>
-        <div style="text-align: center; color: var(--text-muted); margin-top: 10px; font-size: 0.9rem;">LOADING DATA...</div>
+        <div class="loader"></div><div style="text-align: center; color: var(--text-muted); margin-top: 10px; font-size: 0.9rem;">LOADING DATA...</div>
     </div>
 
-    <div id="about-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeAbout()">&times;</span>
-            <h2>About</h2>
-            <p id="modal-text">...</p>
+    <div id="about-modal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeAbout()">&times;</span><h2>About</h2><p id="modal-text">...</p></div></div>
+    <div id="status-modal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeStatus()">&times;</span><h2><i class="fas fa-server" style="margin-right: 10px;"></i>System Status</h2>
+        <div class="status-list">
+            <div class="status-item"><span><i class="fas fa-globe" style="margin-right:8px; color:var(--text-muted);"></i>Web Interface</span><span class="status-badge status-ok">Operational</span></div>
+            <div class="status-item"><span><i class="fas fa-database" style="margin-right:8px; color:var(--text-muted);"></i>Database (API)</span><span class="status-badge status-checking" id="badge-api">Checking...</span></div>
+            <div class="status-item"><span><i class="fas fa-photo-video" style="margin-right:8px; color:var(--text-muted);"></i>Media Components</span><span class="status-badge status-checking" id="badge-media">Checking...</span></div>
+        </div>
+    </div></div>
+
+    <div id="user-profile-modal" class="modal">
+        <div class="modal-content" style="text-align: center; padding: 40px 30px;">
+            <span class="close-modal" onclick="closeUserProfile()">&times;</span>
+            <img id="modal-user-pic" src="" style="width: 85px; height: 85px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.1); box-shadow: 0 5px 20px rgba(0,0,0,0.4);">
+            <h2 id="modal-user-name" style="margin-bottom: 5px; font-size: 1.3rem;">Name</h2>
+            <p id="modal-user-email" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">email</p>
+            
+            <div id="modal-user-role-container" style="display: inline-block; padding: 6px 18px; border-radius: 20px; font-weight: 700; margin-bottom: 25px; text-transform: uppercase; font-size: 0.85rem;">
+                ROLE: <span id="modal-user-role">PUBLIC</span>
+            </div>
+            
+            <div id="admin-panel-btn" style="display: none; margin-bottom: 15px;">
+                <button onclick="openAdminDashboard()" style="background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid rgba(52, 199, 89, 0.5); padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; width: 100%; transition: all 0.3s; font-size: 0.95rem;">
+                    <i class="fas fa-cog" style="margin-right: 8px;"></i> Manage System (Admin)
+                </button>
+            </div>
+
+            <button onclick="logout()" style="background: rgba(255,59,48,0.15); color: #ff3b30; border: 1px solid rgba(255,59,48,0.3); padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; width: 100%; transition: all 0.3s; font-size: 0.95rem;">
+                <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Sign Out
+            </button>
         </div>
     </div>
 
-    <div id="status-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeStatus()">&times;</span>
-            <h2><i class="fas fa-server" style="margin-right: 10px;"></i>System Status</h2>
-            <div class="status-list">
-                <div class="status-item"><span><i class="fas fa-globe" style="margin-right:8px; color:var(--text-muted);"></i>Web Interface</span><span class="status-badge status-ok">Operational</span></div>
-                <div class="status-item"><span><i class="fas fa-database" style="margin-right:8px; color:var(--text-muted);"></i>Database (API)</span><span class="status-badge status-checking" id="badge-api">Checking...</span></div>
-                <div class="status-item"><span><i class="fas fa-photo-video" style="margin-right:8px; color:var(--text-muted);"></i>Media Components</span><span class="status-badge status-checking" id="badge-media">Checking...</span></div>
+    <div id="admin-dashboard-modal" class="modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <span class="close-modal" onclick="closeAdminDashboard()">&times;</span>
+            <h2><i class="fas fa-shield-alt" style="color:#34c759; margin-right: 10px;"></i>Admin Dashboard</h2>
+            
+            <div class="admin-tab-container">
+                <button class="admin-tab active" id="tab-btn-links" onclick="switchAdminTab('links')">🔗 Links Auth</button>
+                <button class="admin-tab" id="tab-btn-users" onclick="switchAdminTab('users')">👥 User Roles</button>
             </div>
+
+            <div id="admin-tab-links" class="admin-list"></div>
+
+            <div id="admin-tab-users" class="admin-list" style="display: none;"></div>
         </div>
     </div>
 
     <div id="login-modal" class="modal">
         <div class="modal-content" style="text-align: center; padding-top: 45px;">
             <span class="close-modal" onclick="closeLogin()">&times;</span>
-            <h2 style="justify-content: center; display: flex; align-items: center; gap: 10px;"><i class="fas fa-user-circle"></i> User Sign In</h2>
-            <p style="margin-bottom: 25px; font-size: 0.95rem;">ล็อกอินด้วยบัญชี Google เพื่อเข้าถึงลิงก์พิเศษระดับส่วนตัว</p>
-            
+            <h2 style="justify-content: center; display: flex; align-items: center; gap: 10px;"><i class="fas fa-user-circle"></i> Sign In</h2>
+            <p style="margin-bottom: 25px; font-size: 0.95rem;">ล็อกอินด้วยบัญชี Google เพื่อเข้าถึงลิงก์พิเศษ</p>
             <div style="display: flex; justify-content: center; margin-bottom: 10px;">
-                <div id="g_id_onload"
-                     data-client_id="906677442222-kmjgsmta70n24aoaq7osm9c1l7g1fb89.apps.googleusercontent.com"
-                     data-context="signin"
-                     data-ux_mode="popup"
-                     data-callback="handleCredentialResponse"
-                     data-auto_prompt="false">
-                </div>
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-shape="pill"
-                     data-theme="outline"
-                     data-text="signin_with"
-                     data-size="large"
-                     data-logo_alignment="left">
-                </div>
+                <div id="g_id_onload" data-client_id="906677442222-kmjgsmta70n24aoaq7osm9c1l7g1fb89.apps.googleusercontent.com" data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
+                <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
             </div>
-            </div>
+        </div>
     </div>
 
-    <button class="unlock-btn" id="unlockBtn" onclick="handleAuthClick()">
-        <i class="fas fa-lock"></i>
-    </button>
+    <button class="unlock-btn" id="unlockBtn" onclick="handleProfileClick()"><i class="fas fa-lock"></i></button>
 
     <script>
-        // API เดิมของคุณมีน
-        const API_URL = "https://script.google.com/macros/s/AKfycbyNoUFK4qqqYQ4c11vVyugVKk5qzF6fQcdoL1cQL-PbSVIeE2FpO5-56YVHB9cZxjaS0w/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbzXB_CssFkIeViXfeLq1Ap9a2Q_WvNx29bbRxYKm8UVszGNRg47gPP9lT6sHkpxFfMjsA/exec";
 
         let currentAccessGroup = 'public';
         let globalAllLinks = [];
+        let globalAllUsers = []; // เก็บรายชื่อ User สำหรับ Admin
         let aboutTextContent = '';
         let systemStatus = { api: 'checking', media: 'checking' };
-        
-        // สถานะ User
         let isLoggedIn = false;
         let currentUser = null;
 
-        // --- System Status Controllers ---
-        function updateSystemStatus(component, status) { systemStatus[component] = status; renderOverallStatus(); }
+        // --- Basic UI & Status ---
+        function updateSystemStatus(c, s) { systemStatus[c] = s; renderOverallStatus(); }
         function renderOverallStatus() {
-            const dot = document.getElementById('nav-status-dot');
-            const text = document.getElementById('nav-status-text');
-            const badgeApi = document.getElementById('badge-api');
-            const badgeMedia = document.getElementById('badge-media');
-            updateBadge(badgeApi, systemStatus.api); updateBadge(badgeMedia, systemStatus.media);
-            if (systemStatus.api === 'error' || systemStatus.media === 'error') {
-                dot.className = 'status-dot error'; text.innerText = 'System Issue'; text.style.color = '#ff3b30';
-            } else if (systemStatus.api === 'checking' || systemStatus.media === 'checking') {
-                dot.className = 'status-dot checking'; text.innerText = 'Checking...'; text.style.color = '#ffcc00';
-            } else {
-                dot.className = 'status-dot ok'; text.innerText = 'All Systems Normal'; text.style.color = '#34c759';
-            }
+            const dot = document.getElementById('nav-status-dot'), text = document.getElementById('nav-status-text');
+            updateBadge(document.getElementById('badge-api'), systemStatus.api); updateBadge(document.getElementById('badge-media'), systemStatus.media);
+            if (systemStatus.api === 'error' || systemStatus.media === 'error') { dot.className = 'status-dot error'; text.innerText = 'System Issue'; text.style.color = '#ff3b30'; }
+            else if (systemStatus.api === 'checking' || systemStatus.media === 'checking') { dot.className = 'status-dot checking'; text.innerText = 'Checking...'; text.style.color = '#ffcc00'; }
+            else { dot.className = 'status-dot ok'; text.innerText = 'All Systems Normal'; text.style.color = '#34c759'; }
         }
-        function updateBadge(element, status) {
-            if (status === 'ok') { element.className = 'status-badge status-ok'; element.innerText = 'Operational'; } 
-            else if (status === 'error') { element.className = 'status-badge status-error'; element.innerText = 'Outage'; } 
-            else { element.className = 'status-badge status-checking'; element.innerText = 'Checking...'; }
-        }
+        function updateBadge(el, st) { if (st==='ok') { el.className='status-badge status-ok'; el.innerText='Operational'; } else if (st==='error') { el.className='status-badge status-error'; el.innerText='Outage'; } else { el.className='status-badge status-checking'; el.innerText='Checking...'; } }
 
-        // --- Animation Observer ---
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach((entry, index) => { 
-                if (entry.isIntersecting) setTimeout(() => { entry.target.classList.add('visible'); }, index * 80); 
-            });
-        }, { threshold: 0.1 });
+        const observer = new IntersectionObserver((entries) => { entries.forEach((entry, i) => { if (entry.isIntersecting) setTimeout(() => { entry.target.classList.add('visible'); }, i * 80); }); }, { threshold: 0.1 });
         document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
 
-        // --- UI Modals ---
         function toggleDropdown() { document.getElementById("apps-dropdown-list").classList.toggle("show"); document.querySelector(".dropbtn").classList.toggle("active"); }
-        function openAbout() { document.getElementById('modal-text').innerText = aboutTextContent || "No info."; document.getElementById('about-modal').style.display = "flex"; }
-        function closeAbout() { document.getElementById('about-modal').style.display = "none"; }
-        function openStatus() { document.getElementById('status-modal').style.display = "flex"; }
-        function closeStatus() { document.getElementById('status-modal').style.display = "none"; }
-        function openLogin() { document.getElementById('login-modal').style.display = "flex"; }
-        function closeLogin() { document.getElementById('login-modal').style.display = "none"; }
+        function openAbout() { document.getElementById('modal-text').innerText = aboutTextContent || "No info."; document.getElementById('about-modal').style.display="flex"; }
+        function closeAbout() { document.getElementById('about-modal').style.display="none"; }
+        function openStatus() { document.getElementById('status-modal').style.display="flex"; }
+        function closeStatus() { document.getElementById('status-modal').style.display="none"; }
+        function openLogin() { document.getElementById('login-modal').style.display="flex"; }
+        function closeLogin() { document.getElementById('login-modal').style.display="none"; }
+        function closeUserProfile() { document.getElementById('user-profile-modal').style.display="none"; }
+        function closeAdminDashboard() { document.getElementById('admin-dashboard-modal').style.display="none"; }
 
         window.onclick = function(event) {
             if (!event.target.closest('.dropdown') && !event.target.classList.contains('dropbtn')) {
-                var dropdowns = document.getElementsByClassName("dropdown-content");
-                var btn = document.querySelector(".dropbtn");
-                if(btn) btn.classList.remove("active");
-                for (var i = 0; i < dropdowns.length; i++) dropdowns[i].classList.remove('show');
+                var d = document.getElementsByClassName("dropdown-content");
+                if(document.querySelector(".dropbtn")) document.querySelector(".dropbtn").classList.remove("active");
+                for (var i=0; i<d.length; i++) d[i].classList.remove('show');
             }
-            if (event.target == document.getElementById('about-modal')) closeAbout();
-            if (event.target == document.getElementById('status-modal')) closeStatus();
-            if (event.target == document.getElementById('login-modal')) closeLogin();
+            if(event.target == document.getElementById('about-modal')) closeAbout();
+            if(event.target == document.getElementById('status-modal')) closeStatus();
+            if(event.target == document.getElementById('login-modal')) closeLogin();
+            if(event.target == document.getElementById('user-profile-modal')) closeUserProfile();
+            if(event.target == document.getElementById('admin-dashboard-modal')) closeAdminDashboard();
         }
 
-        function searchLinks() {
-            const term = document.getElementById('search-input').value.toLowerCase();
-            const filtered = globalAllLinks.filter(link => link.title.toLowerCase().includes(term));
-            renderLinks(filtered);
-        }
+        function searchLinks() { const t = document.getElementById('search-input').value.toLowerCase(); renderLinks(globalAllLinks.filter(l => l.title.toLowerCase().includes(t))); }
+        setInterval(() => document.getElementById('nav-clock').innerText = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'}), 1000);
 
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('nav-clock').innerText = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-        setInterval(updateClock, 1000); updateClock();
-
-        // --- GOOGLE AUTHENTICATION LOGIC ---
-        function decodeJwtResponse(token) {
-            var base64Url = token.split('.')[1];
-            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-        }
-
-        function handleCredentialResponse(response) {
-            const payload = decodeJwtResponse(response.credential);
-            closeLogin();
-            
-            // เรียกโหลดข้อมูลใหม่พร้อมส่ง Email ไปที่ Apps Script
+        // --- Auth & API Fetch ---
+        function decodeJwtResponse(t) { return JSON.parse(decodeURIComponent(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))); }
+        
+        function handleCredentialResponse(res) {
+            const payload = decodeJwtResponse(res.credential); closeLogin();
             updateSystemStatus('api', 'checking');
             document.getElementById('links-container').innerHTML = '<div class="loader"></div><div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Authenticating...</div>';
-            
             loadData(payload.email, payload.name, payload.picture);
         }
 
-        function handleAuthClick() {
-            if (isLoggedIn) {
-                if(confirm("🔒 คุณต้องการออกจากระบบ (Logout) หรือไม่?")) {
-                    isLoggedIn = false; currentUser = null; currentAccessGroup = 'public';
-                    document.getElementById('unlockBtn').classList.remove('active');
-                    document.getElementById('unlockBtn').innerHTML = '<i class="fas fa-lock"></i>';
-                    alert("ออกจากระบบเรียบร้อยแล้ว");
-                    renderLinks(globalAllLinks); 
+        function handleProfileClick() {
+            if (isLoggedIn && currentUser) {
+                document.getElementById('modal-user-pic').src = currentUser.pic;
+                document.getElementById('modal-user-name').innerText = currentUser.name;
+                document.getElementById('modal-user-email').innerText = currentUser.email;
+                document.getElementById('modal-user-role').innerText = currentUser.role;
+                
+                const roleContainer = document.getElementById('modal-user-role-container');
+                const adminBtn = document.getElementById('admin-panel-btn');
+                
+                if(currentUser.role === 'admin') {
+                    roleContainer.style.background = 'rgba(52, 199, 89, 0.15)'; roleContainer.style.border = '1px solid rgba(52, 199, 89, 0.3)'; roleContainer.style.color = '#34c759';
+                    adminBtn.style.display = 'block'; // โชว์ปุ่ม Admin
+                } else {
+                    roleContainer.style.background = 'rgba(255,159,10,0.15)'; roleContainer.style.border = '1px solid rgba(255,159,10,0.3)'; roleContainer.style.color = 'var(--accent-special)';
+                    adminBtn.style.display = 'none'; // ซ่อนปุ่ม
                 }
+                document.getElementById('user-profile-modal').style.display = "flex";
             } else { openLogin(); }
         }
 
-        // --- Fetch Data (อัปเดตเพื่อรองรับ Email) ---
+        function logout() {
+            closeUserProfile(); isLoggedIn = false; currentUser = null; currentAccessGroup = 'public'; globalAllUsers = [];
+            const btn = document.getElementById('unlockBtn'); btn.classList.remove('active', 'admin-mode'); btn.innerHTML = '<i class="fas fa-lock"></i>';
+            renderLinks(globalAllLinks); updateNavbarImage();
+        }
+
         async function loadData(userEmail = '', userName = '', userPic = '') {
             try {
                 let fetchUrl = API_URL;
-                // ถ้ามีการล็อกอิน ให้แนบ email และ name ไปด้วย
                 if (userEmail) fetchUrl += `?email=${encodeURIComponent(userEmail)}&name=${encodeURIComponent(userName)}`;
 
                 const response = await fetch(fetchUrl);
@@ -385,14 +328,11 @@
 
                 updateSystemStatus('api', 'ok'); updateSystemStatus('media', 'ok');
 
-                // จัดการข้อมูล User ที่ส่งกลับมาจาก Apps Script
                 if (userEmail && data.user) {
-                    isLoggedIn = true;
-                    currentAccessGroup = data.user.role || 'public';
-                    currentUser = { email: data.user.email, role: data.user.role, pic: userPic };
-                    
-                    document.getElementById('unlockBtn').classList.add('active');
-                    document.getElementById('unlockBtn').innerHTML = '<i class="fas fa-unlock"></i>';
+                    isLoggedIn = true; currentAccessGroup = data.user.role || 'public';
+                    currentUser = { email: data.user.email, name: userName, role: data.user.role, pic: userPic };
+                    const btn = document.getElementById('unlockBtn'); btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-unlock"></i>';
+                    if (currentAccessGroup === 'admin') btn.classList.add('admin-mode');
                 }
 
                 if(data.profile) {
@@ -401,93 +341,153 @@
                     document.getElementById('main-profile-img').src = data.profile.imageUrl || 'https://ui-avatars.com/api/?name=M&background=random';
                     aboutTextContent = data.profile.aboutText || '';
                     if(data.profile.videoUrl) {
-                        const match = data.profile.videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
-                        if(match && match[2].length === 11) {
-                            document.getElementById('youtube-iframe').src = `https://www.youtube.com/embed/${match[2]}`;
-                            document.getElementById('featured-video').style.display = 'block';
-                        }
+                        const m = data.profile.videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+                        if(m && m[2].length===11) { document.getElementById('youtube-iframe').src = `https://www.youtube.com/embed/${m[2]}`; document.getElementById('featured-video').style.display = 'block'; }
                     }
                 }
 
-                const menuContainer = document.getElementById('apps-dropdown-list'); menuContainer.innerHTML = '';
-                if(data.apps && data.apps.length > 0) {
-                    data.apps.forEach(app => menuContainer.innerHTML += `<a href="${app.url}" target="_blank">${app.name}</a>`);
-                } else menuContainer.innerHTML = '<a href="#" style="color:var(--text-muted); padding-left:20px;">No Apps</a>';
+                const menu = document.getElementById('apps-dropdown-list'); menu.innerHTML = '';
+                if(data.apps && data.apps.length > 0) data.apps.forEach(a => menu.innerHTML += `<a href="${a.url}" target="_blank">${a.name}</a>`);
+                else menu.innerHTML = '<a href="#" style="color:var(--text-muted); padding-left:20px;">No Apps</a>';
 
                 if(data.links) { globalAllLinks = data.links; renderLinks(globalAllLinks); }
+                if(data.allUsers) { globalAllUsers = data.allUsers; } // เซฟข้อมูลรายชื่อคนไว้ใช้ใน Admin Board
 
             } catch (error) {
-                console.error("Error loading data:", error);
-                updateSystemStatus('api', 'error'); updateSystemStatus('media', 'error');
-                document.getElementById('links-container').innerHTML = `<div style="text-align:center; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); padding: 20px; border-radius: 20px; color: #ff3b30; margin-top: 10px;"><i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px;"></i><h3 style="margin-bottom: 5px;">Connection Failed</h3><p style="font-size: 0.9rem; opacity: 0.8;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p></div>`;
+                console.error(error); updateSystemStatus('api', 'error'); updateSystemStatus('media', 'error');
+                document.getElementById('links-container').innerHTML = `<div style="text-align:center; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); padding: 20px; border-radius: 20px; color: #ff3b30; margin-top: 10px;"><i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px;"></i><h3 style="margin-bottom: 5px;">Connection Failed</h3></div>`;
             }
         }
 
-        // --- Render Links ---
+        // --- Admin Dashboard Logic ---
+        function openAdminDashboard() {
+            closeUserProfile();
+            renderAdminLinks();
+            renderAdminUsers();
+            document.getElementById('admin-dashboard-modal').style.display = "flex";
+        }
+
+        function switchAdminTab(tab) {
+            document.getElementById('tab-btn-links').classList.remove('active');
+            document.getElementById('tab-btn-users').classList.remove('active');
+            document.getElementById('admin-tab-links').style.display = 'none';
+            document.getElementById('admin-tab-users').style.display = 'none';
+            
+            document.getElementById('tab-btn-' + tab).classList.add('active');
+            document.getElementById('admin-tab-' + tab).style.display = 'block';
+        }
+
+        function renderAdminLinks() {
+            const container = document.getElementById('admin-tab-links');
+            container.innerHTML = '';
+            globalAllLinks.forEach((link, index) => {
+                const selectId = `admin-link-sel-${index}`;
+                container.innerHTML += `
+                    <div class="admin-item">
+                        <div style="width: 60%;">
+                            <div class="admin-item-title">${link.title}</div>
+                            <div class="admin-item-subtitle"><i class="fas fa-link"></i> ${link.url.substring(0,25)}...</div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <input type="text" id="${selectId}" class="admin-select" value="${link.group || 'public'}" style="width: 80px;" placeholder="group">
+                            <button class="admin-btn-save" onclick="updateAdminData('updateLink', '${link.title.replace(/'/g, "\\'")}', '${selectId}')">Save</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function renderAdminUsers() {
+            const container = document.getElementById('admin-tab-users');
+            container.innerHTML = '';
+            if(globalAllUsers.length === 0) { container.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:20px;">No users found</p>'; return; }
+            
+            globalAllUsers.forEach((user, index) => {
+                const selectId = `admin-user-sel-${index}`;
+                container.innerHTML += `
+                    <div class="admin-item">
+                        <div style="width: 60%;">
+                            <div class="admin-item-title">${user.name}</div>
+                            <div class="admin-item-subtitle">${user.email}</div>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <select id="${selectId}" class="admin-select">
+                                <option value="public" ${user.role==='public'?'selected':''}>Public</option>
+                                <option value="vip" ${user.role==='vip'?'selected':''}>VIP</option>
+                                <option value="family" ${user.role==='family'?'selected':''}>Family</option>
+                                <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
+                            </select>
+                            <button class="admin-btn-save" onclick="updateAdminData('updateRole', '${user.email}', '${selectId}')">Save</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function updateAdminData(action, param1, selectId) {
+            const param2 = document.getElementById(selectId).value; // ดึงค่าจากช่อง Input หรือ Select
+            const btn = document.getElementById(selectId).nextElementSibling;
+            const originalText = btn.innerText;
+            btn.innerText = '...'; btn.disabled = true;
+
+            try {
+                // ส่งคำสั่งไปบอก Google Apps Script
+                const url = `${API_URL}?email=${encodeURIComponent(currentUser.email)}&action=${action}&p1=${encodeURIComponent(param1)}&p2=${encodeURIComponent(param2)}`;
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success) {
+                    btn.innerText = '✔'; btn.style.background = '#34c759';
+                    // โหลดข้อมูลใหม่ทั้งหมดมาอัปเดตเว็บ
+                    setTimeout(() => { btn.innerText = originalText; btn.style.background = 'var(--accent)'; btn.disabled = false; loadData(currentUser.email, currentUser.name, currentUser.pic); }, 1500);
+                } else { throw new Error(result.message); }
+            } catch(e) {
+                alert("เกิดข้อผิดพลาด: " + e.message);
+                btn.innerText = 'Failed'; btn.style.background = '#ff3b30';
+                setTimeout(() => { btn.innerText = originalText; btn.style.background = 'var(--accent)'; btn.disabled = false; }, 2000);
+            }
+        }
+
+        // --- Rendering Links to UI ---
         function renderLinks(linksData) {
             const container = document.getElementById('links-container'); container.innerHTML = ''; 
             if(!linksData || linksData.length === 0) { container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">No links found</p>'; return; }
 
             const visibleLinks = linksData.filter(link => {
+                if(currentAccessGroup === 'admin') return true;
                 const groups = (link.group || 'public').toLowerCase().split(',').map(g => g.trim());
                 return groups.includes('public') || groups.includes(currentAccessGroup);
             });
-            const specialLinks = visibleLinks.filter(link => {
-                const groups = (link.group || 'public').toLowerCase().split(',').map(g => g.trim());
-                return !groups.includes('public') && groups.includes(currentAccessGroup);
-            });
+            const specialLinks = visibleLinks.filter(link => !((link.group || 'public').toLowerCase().split(',').map(g => g.trim()).includes('public')));
             const publicLinks = visibleLinks.filter(link => (link.group || 'public').toLowerCase().includes('public'));
 
             if (specialLinks.length > 0) {
-                container.innerHTML += `<div class="group-divider fade-in">Unlocked Access: ${currentAccessGroup}</div>`;
+                container.innerHTML += `<div class="group-divider fade-in">${currentAccessGroup === 'admin' ? 'ADMIN ACCESS (ALL LINKS)' : `Unlocked Access: ${currentAccessGroup.toUpperCase()}`}</div>`;
                 specialLinks.forEach(link => renderLinkItem(container, link, true));
             }
             if (publicLinks.length > 0) {
                 if (specialLinks.length > 0) container.innerHTML += `<div class="group-divider fade-in" style="margin-top: 30px;">Public Links</div>`;
                 publicLinks.forEach(link => renderLinkItem(container, link, false));
             }
-
-            document.querySelectorAll('#links-container .fade-in').forEach((el) => observer.observe(el));
-            updateNavbarImage();
+            document.querySelectorAll('#links-container .fade-in').forEach((el) => observer.observe(el)); updateNavbarImage();
         }
 
         function renderLinkItem(container, link, isSpecial) {
-            const iconClass = link.icon || 'fas fa-link';
-            const specialClass = isSpecial ? 'special-access' : '';
-            const badge = isSpecial ? `<span class="badge badge-vip"><i class="fas fa-check-circle" style="margin-right:6px;"></i>${currentAccessGroup}</span>` : '';
-            let iconColorStyle = ''; const iconLower = iconClass.toLowerCase();
-            if(iconLower.includes('facebook')) iconColorStyle = 'color: #1877F2;';
-            else if(iconLower.includes('youtube')) iconColorStyle = 'color: #FF0000;';
-            else if(iconLower.includes('instagram')) iconColorStyle = 'color: #E4405F;';
-            else if(iconLower.includes('line')) iconColorStyle = 'color: #00C300;';
-            else if(iconLower.includes('tiktok')) iconColorStyle = 'color: #ffffff;';
-            else if(iconLower.includes('github')) iconColorStyle = 'color: #ffffff;';
-            else iconColorStyle = 'color: var(--accent);';
-
-            container.innerHTML += `
-                <a href="${link.url}" target="_blank" class="link-card fade-in ${specialClass}">
-                    <div class="link-icon"><i class="${iconClass}" style="${iconColorStyle}"></i></div>
-                    <div class="link-text">${link.title}</div>
-                    ${badge}
-                </a>`;
+            let specialClass = '', badge = '';
+            if (isSpecial) {
+                if (currentAccessGroup === 'admin') { specialClass = 'admin-access'; badge = `<span class="badge badge-admin"><i class="fas fa-shield-alt" style="margin-right:6px;"></i>ADMIN</span>`; }
+                else { specialClass = 'special-access'; badge = `<span class="badge badge-vip"><i class="fas fa-check-circle" style="margin-right:6px;"></i>${currentAccessGroup}</span>`; }
+            }
+            let c = ''; const l = (link.icon||'').toLowerCase();
+            if(l.includes('facebook')) c = 'color: #1877F2;'; else if(l.includes('youtube')) c = 'color: #FF0000;'; else if(l.includes('instagram')) c = 'color: #E4405F;'; else if(l.includes('line')) c = 'color: #00C300;'; else if(l.includes('tiktok')) c = 'color: #ffffff;'; else if(l.includes('github')) c = 'color: #ffffff;'; else c = 'color: var(--accent);';
+            container.innerHTML += `<a href="${link.url}" target="_blank" class="link-card fade-in ${specialClass}"><div class="link-icon"><i class="${link.icon||'fas fa-link'}" style="${c}"></i></div><div class="link-text">${link.title}</div>${badge}</a>`;
         }
 
         function updateNavbarImage() {
             const navImg = document.getElementById('nav-profile-img');
-            if (isLoggedIn && currentUser && currentUser.pic) {
-                navImg.src = currentUser.pic;
-                navImg.style.borderColor = "var(--accent-special)";
-                navImg.style.boxShadow = "0 0 15px rgba(255, 159, 10, 0.4)";
-            } else {
-                navImg.style.borderColor = "rgba(255,255,255,0.1)";
-                navImg.style.boxShadow = "none";
-                navImg.src = document.getElementById('main-profile-img').src || 'https://ui-avatars.com/api/?name=User';
-            }
+            if (isLoggedIn && currentUser && currentUser.pic) { navImg.src = currentUser.pic; navImg.style.borderColor = currentAccessGroup === 'admin' ? "#34c759" : "var(--accent-special)"; navImg.style.boxShadow = currentAccessGroup === 'admin' ? "0 0 15px rgba(52, 199, 89, 0.4)" : "0 0 15px rgba(255, 159, 10, 0.4)"; } 
+            else { navImg.style.borderColor = "rgba(255,255,255,0.1)"; navImg.style.boxShadow = "none"; navImg.src = document.getElementById('main-profile-img').src || 'https://ui-avatars.com/api/?name=User'; }
         }
 
-        // --- Init ---
-        renderOverallStatus();
-        loadData();
+        renderOverallStatus(); loadData();
     </script>
 </body>
 </html>
