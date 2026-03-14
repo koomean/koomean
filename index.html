@@ -26,7 +26,7 @@
         .menu-link { color: var(--text-muted); cursor: pointer; font-size: 0.95rem; font-weight: 500; transition: color 0.3s, transform 0.2s; display: flex; align-items: center; gap: 6px; user-select: none; }
         .menu-link:hover, .menu-link.active { color: var(--text-main); transform: translateY(-2px); }
         .dropdown { position: relative; }
-        .dropdown-content { display: none; position: absolute; top: calc(100% + 15px); left: 0; background: rgba(20, 20, 22, 0.85); backdrop-filter: blur(25px); min-width: 200px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; z-index: 1001; box-shadow: 0 15px 50px rgba(0,0,0,0.6); }
+        .dropdown-content { display: none; position: absolute; top: calc(100% + 15px); left: 0; background: rgba(20, 20, 22, 0.85); backdrop-filter: blur(25px); min-width: 150px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; z-index: 1001; box-shadow: 0 15px 50px rgba(0,0,0,0.6); }
         .dropdown-content.show { display: block; animation: fadeInDrop 0.3s; }
         @keyframes fadeInDrop { from { opacity: 0; transform: translateY(-15px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .dropdown-content a { color: var(--text-main); padding: 14px 20px; text-decoration: none; display: block; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
@@ -134,9 +134,18 @@
                 <span style="font-size: 1.3rem;">💻</span><span>Koo Mean SITE V.2</span>
             </a>
             <div class="dropdown">
-                <div class="menu-link dropbtn" onclick="toggleDropdown()">Apps <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i></div>
+                <div class="menu-link dropbtn" onclick="toggleAppDropdown()">Apps <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i></div>
                 <div class="dropdown-content" id="apps-dropdown-list"></div>
             </div>
+            
+            <div class="dropdown" id="admin-simulate-dropdown" style="display: none;">
+                <div class="menu-link dropbtn" onclick="toggleSimulateDropdown()" style="color: #34c759; font-weight: bold;">
+                    <i class="fas fa-eye" style="margin-right: 4px;"></i> <span id="view-as-text">View As: ADMIN</span> <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i>
+                </div>
+                <div class="dropdown-content" id="simulate-dropdown-list">
+                    </div>
+            </div>
+
             <div class="menu-link" onclick="openAbout()">About</div>
         </div>
         <div class="nav-right">
@@ -234,7 +243,7 @@
 
         let currentAccessGroup = 'public';
         let globalAllLinks = [];
-        let globalAllUsers = []; // เก็บรายชื่อ User สำหรับ Admin
+        let globalAllUsers = []; 
         let aboutTextContent = '';
         let systemStatus = { api: 'checking', media: 'checking' };
         let isLoggedIn = false;
@@ -254,7 +263,16 @@
         const observer = new IntersectionObserver((entries) => { entries.forEach((entry, i) => { if (entry.isIntersecting) setTimeout(() => { entry.target.classList.add('visible'); }, i * 80); }); }, { threshold: 0.1 });
         document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
 
-        function toggleDropdown() { document.getElementById("apps-dropdown-list").classList.toggle("show"); document.querySelector(".dropbtn").classList.toggle("active"); }
+        // --- Dropdowns & Modals ---
+        function toggleAppDropdown() { 
+            document.getElementById("apps-dropdown-list").classList.toggle("show"); 
+            document.getElementById("simulate-dropdown-list").classList.remove("show");
+        }
+        function toggleSimulateDropdown() { 
+            document.getElementById("simulate-dropdown-list").classList.toggle("show"); 
+            document.getElementById("apps-dropdown-list").classList.remove("show");
+        }
+        
         function openAbout() { document.getElementById('modal-text').innerText = aboutTextContent || "No info."; document.getElementById('about-modal').style.display="flex"; }
         function closeAbout() { document.getElementById('about-modal').style.display="none"; }
         function openStatus() { document.getElementById('status-modal').style.display="flex"; }
@@ -265,9 +283,8 @@
         function closeAdminDashboard() { document.getElementById('admin-dashboard-modal').style.display="none"; }
 
         window.onclick = function(event) {
-            if (!event.target.closest('.dropdown') && !event.target.classList.contains('dropbtn')) {
+            if (!event.target.closest('.dropdown')) {
                 var d = document.getElementsByClassName("dropdown-content");
-                if(document.querySelector(".dropbtn")) document.querySelector(".dropbtn").classList.remove("active");
                 for (var i=0; i<d.length; i++) d[i].classList.remove('show');
             }
             if(event.target == document.getElementById('about-modal')) closeAbout();
@@ -279,6 +296,40 @@
 
         function searchLinks() { const t = document.getElementById('search-input').value.toLowerCase(); renderLinks(globalAllLinks.filter(l => l.title.toLowerCase().includes(t))); }
         setInterval(() => document.getElementById('nav-clock').innerText = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'}), 1000);
+
+        // --- Simulate Role Logic ---
+        function extractUniqueRoles() {
+            const roles = new Set(['admin', 'public']); // ค่าพื้นฐาน
+            globalAllLinks.forEach(link => {
+                if (link.group) link.group.split(',').forEach(g => roles.add(g.trim().toLowerCase()));
+            });
+            globalAllUsers.forEach(user => {
+                if (user.role) roles.add(user.role.toLowerCase());
+            });
+            return Array.from(roles);
+        }
+
+        function buildSimulateMenu() {
+            const menu = document.getElementById('admin-simulate-dropdown');
+            if (isLoggedIn && currentUser && currentUser.role === 'admin') {
+                menu.style.display = 'block';
+                const list = document.getElementById('simulate-dropdown-list');
+                list.innerHTML = '';
+                const roles = extractUniqueRoles();
+                roles.forEach(r => {
+                    list.innerHTML += `<a href="#" onclick="simulateRole('${r}')">${r.toUpperCase()}</a>`;
+                });
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        function simulateRole(role) {
+            currentAccessGroup = role;
+            document.getElementById('view-as-text').innerText = `View As: ${role.toUpperCase()}`;
+            renderLinks(globalAllLinks);
+            document.getElementById("simulate-dropdown-list").classList.remove("show");
+        }
 
         // --- Auth & API Fetch ---
         function decodeJwtResponse(t) { return JSON.parse(decodeURIComponent(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))); }
@@ -302,10 +353,10 @@
                 
                 if(currentUser.role === 'admin') {
                     roleContainer.style.background = 'rgba(52, 199, 89, 0.15)'; roleContainer.style.border = '1px solid rgba(52, 199, 89, 0.3)'; roleContainer.style.color = '#34c759';
-                    adminBtn.style.display = 'block'; // โชว์ปุ่ม Admin
+                    adminBtn.style.display = 'block'; 
                 } else {
                     roleContainer.style.background = 'rgba(255,159,10,0.15)'; roleContainer.style.border = '1px solid rgba(255,159,10,0.3)'; roleContainer.style.color = 'var(--accent-special)';
-                    adminBtn.style.display = 'none'; // ซ่อนปุ่ม
+                    adminBtn.style.display = 'none'; 
                 }
                 document.getElementById('user-profile-modal').style.display = "flex";
             } else { openLogin(); }
@@ -314,7 +365,7 @@
         function logout() {
             closeUserProfile(); isLoggedIn = false; currentUser = null; currentAccessGroup = 'public'; globalAllUsers = [];
             const btn = document.getElementById('unlockBtn'); btn.classList.remove('active', 'admin-mode'); btn.innerHTML = '<i class="fas fa-lock"></i>';
-            renderLinks(globalAllLinks); updateNavbarImage();
+            buildSimulateMenu(); renderLinks(globalAllLinks); updateNavbarImage();
         }
 
         async function loadData(userEmail = '', userName = '', userPic = '') {
@@ -333,6 +384,7 @@
                     currentUser = { email: data.user.email, name: userName, role: data.user.role, pic: userPic };
                     const btn = document.getElementById('unlockBtn'); btn.classList.add('active'); btn.innerHTML = '<i class="fas fa-unlock"></i>';
                     if (currentAccessGroup === 'admin') btn.classList.add('admin-mode');
+                    document.getElementById('view-as-text').innerText = `View As: ${currentAccessGroup.toUpperCase()}`;
                 }
 
                 if(data.profile) {
@@ -350,8 +402,11 @@
                 if(data.apps && data.apps.length > 0) data.apps.forEach(a => menu.innerHTML += `<a href="${a.url}" target="_blank">${a.name}</a>`);
                 else menu.innerHTML = '<a href="#" style="color:var(--text-muted); padding-left:20px;">No Apps</a>';
 
-                if(data.links) { globalAllLinks = data.links; renderLinks(globalAllLinks); }
-                if(data.allUsers) { globalAllUsers = data.allUsers; } // เซฟข้อมูลรายชื่อคนไว้ใช้ใน Admin Board
+                if(data.links) { globalAllLinks = data.links; }
+                if(data.allUsers) { globalAllUsers = data.allUsers; } 
+
+                buildSimulateMenu(); // อัปเดตเมนู View As
+                renderLinks(globalAllLinks);
 
             } catch (error) {
                 console.error(error); updateSystemStatus('api', 'error'); updateSystemStatus('media', 'error');
@@ -423,20 +478,18 @@
         }
 
         async function updateAdminData(action, param1, selectId) {
-            const param2 = document.getElementById(selectId).value; // ดึงค่าจากช่อง Input หรือ Select
+            const param2 = document.getElementById(selectId).value; 
             const btn = document.getElementById(selectId).nextElementSibling;
             const originalText = btn.innerText;
             btn.innerText = '...'; btn.disabled = true;
 
             try {
-                // ส่งคำสั่งไปบอก Google Apps Script
                 const url = `${API_URL}?email=${encodeURIComponent(currentUser.email)}&action=${action}&p1=${encodeURIComponent(param1)}&p2=${encodeURIComponent(param2)}`;
                 const response = await fetch(url);
                 const result = await response.json();
 
                 if (result.success) {
                     btn.innerText = '✔'; btn.style.background = '#34c759';
-                    // โหลดข้อมูลใหม่ทั้งหมดมาอัปเดตเว็บ
                     setTimeout(() => { btn.innerText = originalText; btn.style.background = 'var(--accent)'; btn.disabled = false; loadData(currentUser.email, currentUser.name, currentUser.pic); }, 1500);
                 } else { throw new Error(result.message); }
             } catch(e) {
