@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Koo Mean SITE V.2</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         :root {
             --bg-color: #050505;
@@ -35,234 +36,125 @@
             position: relative;
         }
 
-        /* --- พื้นหลังเคลื่อนไหว (Animated Background Orbs) --- */
+        /* --- พื้นหลังเคลื่อนไหว --- */
         body::before, body::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            z-index: -1;
-            opacity: 0.5;
+            content: ''; position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: 0.5;
             animation: floatOrb 20s infinite alternate ease-in-out;
         }
-        body::before {
-            width: 400px; height: 400px;
-            background: var(--accent-glow);
-            top: -100px; left: -100px;
-        }
-        body::after {
-            width: 500px; height: 500px;
-            background: rgba(255, 159, 10, 0.15);
-            bottom: -150px; right: -150px;
-            animation-delay: -10s;
-        }
-        @keyframes floatOrb {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(100px, 50px) scale(1.2); }
-        }
+        body::before { width: 400px; height: 400px; background: var(--accent-glow); top: -100px; left: -100px; }
+        body::after { width: 500px; height: 500px; background: rgba(255, 159, 10, 0.15); bottom: -150px; right: -150px; animation-delay: -10s; }
+        @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(100px, 50px) scale(1.2); } }
 
         /* --- Navbar --- */
         .navbar {
             position: fixed; top: 0; left: 0; width: 100%; height: var(--navbar-height);
-            background: rgba(10, 10, 12, 0.6);
-            backdrop-filter: saturate(180%) blur(25px); -webkit-backdrop-filter: saturate(180%) blur(25px);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 25px; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            background: rgba(10, 10, 12, 0.6); backdrop-filter: saturate(180%) blur(25px); -webkit-backdrop-filter: saturate(180%) blur(25px);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 25px; z-index: 1000; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
         }
-
         .nav-left { display: flex; align-items: center; gap: 20px; }
-        .nav-logo {
-            font-size: 1.15rem; font-weight: 700; color: var(--text-main);
-            text-decoration: none; display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: transform 0.3s; }
         .nav-logo:hover { transform: scale(1.05); }
-
-        .menu-link {
-            color: var(--text-muted); cursor: pointer; font-size: 0.95rem; font-weight: 500;
-            transition: color 0.3s, transform 0.2s; display: flex; align-items: center; gap: 6px; user-select: none;
-        }
+        .menu-link { color: var(--text-muted); cursor: pointer; font-size: 0.95rem; font-weight: 500; transition: color 0.3s, transform 0.2s; display: flex; align-items: center; gap: 6px; user-select: none; }
         .menu-link:hover, .menu-link.active { color: var(--text-main); transform: translateY(-2px); }
-
         .dropdown { position: relative; }
         .dropdown-content {
             display: none; position: absolute; top: calc(100% + 15px); left: 0;
             background: rgba(20, 20, 22, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            min-width: 200px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden; z-index: 1001; box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+            min-width: 200px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; z-index: 1001; box-shadow: 0 15px 50px rgba(0,0,0,0.6);
         }
-        .dropdown-content.show { display: block; animation: fadeInDrop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .dropdown-content.show { display: block; animation: fadeInDrop 0.3s; }
         @keyframes fadeInDrop { from { opacity: 0; transform: translateY(-15px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .dropdown-content a {
-            color: var(--text-main); padding: 14px 20px; text-decoration: none;
-            display: block; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s;
-        }
-        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content a { color: var(--text-main); padding: 14px 20px; text-decoration: none; display: block; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
         .dropdown-content a:hover { background: rgba(255,255,255,0.1); padding-left: 25px; color: var(--accent); }
-
+        
         .nav-right { display: flex; align-items: center; gap: 18px; }
         
         /* --- System Status Indicator --- */
         .status-indicator {
-            display: flex; align-items: center; gap: 8px; cursor: pointer;
-            background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            user-select: none;
+            display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,0.05); 
+            padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; font-weight: 600; transition: all 0.3s;
         }
         .status-indicator:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 8px currentColor; transition: 0.3s; }
-        .status-dot.checking { background-color: #ffcc00; color: #ffcc00; animation: blink 1s infinite; }
-        .status-dot.ok { background-color: #34c759; color: #34c759; box-shadow: 0 0 10px rgba(52,199,89,0.5); }
-        .status-dot.error { background-color: #ff3b30; color: #ff3b30; box-shadow: 0 0 10px rgba(255,59,48,0.5); }
-        
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; transition: 0.3s; }
+        .status-dot.checking { background-color: #ffcc00; animation: blink 1s infinite; }
+        .status-dot.ok { background-color: #34c759; box-shadow: 0 0 10px rgba(52,199,89,0.5); }
+        .status-dot.error { background-color: #ff3b30; box-shadow: 0 0 10px rgba(255,59,48,0.5); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
         .nav-clock { font-variant-numeric: tabular-nums; font-size: 0.9rem; color: var(--text-muted); font-weight: 600; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
         .nav-user-container { cursor: pointer; display: flex; align-items: center; }
-        .nav-profile-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .nav-profile-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); transition: all 0.3s; }
         .nav-profile-img:hover { transform: scale(1.1) rotate(5deg); border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
 
         /* --- Profile Section --- */
-        .profile-section { text-align: center; margin-bottom: 40px; width: 100%; max-width: 600px; padding: 0 20px; position: relative; }
-        .profile-img {
-            width: 110px; height: 110px; border-radius: 50%; object-fit: cover;
-            margin-bottom: 18px; border: 2px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 0 20px var(--accent-glow);
-            animation: profilePulse 3s infinite alternate;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .profile-section { text-align: center; margin-bottom: 40px; width: 100%; max-width: 600px; padding: 0 20px; }
+        .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; margin-bottom: 18px; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 0 20px var(--accent-glow); animation: profilePulse 3s infinite alternate; transition: transform 0.5s; }
         .profile-img:hover { transform: scale(1.05); }
-        @keyframes profilePulse {
-            0% { box-shadow: 0 0 15px rgba(41, 151, 255, 0.2); }
-            100% { box-shadow: 0 0 35px rgba(41, 151, 255, 0.6); }
-        }
+        @keyframes profilePulse { 0% { box-shadow: 0 0 15px rgba(41, 151, 255, 0.2); } 100% { box-shadow: 0 0 35px rgba(41, 151, 255, 0.6); } }
         h1 { font-size: clamp(28px, 6vw, 36px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 10px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         p.bio { font-size: 1.05rem; color: var(--text-muted); font-weight: 400; line-height: 1.5; }
 
-        /* --- Search Bar --- */
+        /* --- Search Bar & Video --- */
         .search-container { width: 100%; max-width: 600px; padding: 0 20px; margin-bottom: 35px; position: relative; }
-        .search-input {
-            width: 100%; padding: 16px 20px 16px 50px; border-radius: 25px;
-            border: 1px solid rgba(255,255,255,0.1); background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px); color: var(--text-main); font-size: 1.05rem; 
-            outline: none; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-family: inherit;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .search-input::placeholder { color: var(--text-muted); font-weight: 400; }
-        .search-input:focus { 
-            background: rgba(255,255,255,0.08); border-color: var(--accent); 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 0 3px rgba(41,151,255,0.2);
-            transform: scale(1.02);
-        }
-        .search-icon { position: absolute; left: 40px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; transition: color 0.3s; }
+        .search-input { width: 100%; padding: 16px 20px 16px 50px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); color: var(--text-main); font-size: 1.05rem; outline: none; transition: all 0.4s; }
+        .search-input:focus { background: rgba(255,255,255,0.08); border-color: var(--accent); box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 0 3px rgba(41,151,255,0.2); transform: scale(1.02); }
+        .search-icon { position: absolute; left: 40px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; }
         .search-input:focus + .search-icon { color: var(--accent); }
-
         .video-container { width: 100%; max-width: 600px; padding: 0 20px; margin-bottom: 35px; display: none; }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: #111; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
-        /* --- Links Container & Cards --- */
+        /* --- Links Container --- */
         .container { width: 100%; max-width: 600px; padding: 0 20px 40px 20px; display: flex; flex-direction: column; gap: 15px; }
-        
-        .link-card {
-            background: var(--card-bg); padding: 20px 25px; border-radius: 20px;
-            text-decoration: none; color: var(--text-main); display: flex; align-items: center;
-            border: 1px solid rgba(255,255,255,0.06); 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            cursor: pointer; position: relative; overflow: hidden;
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-        }
-        
-        /* แสงวิบวับวิ่งผ่านการ์ดเวลา Hover (Shine effect) */
-        .link-card::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent);
-            transform: skewX(-25deg); transition: 0.6s ease-in-out;
-        }
+        .link-card { background: var(--card-bg); padding: 20px 25px; border-radius: 20px; text-decoration: none; color: var(--text-main); display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.06); transition: all 0.4s; cursor: pointer; position: relative; overflow: hidden; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
+        .link-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent); transform: skewX(-25deg); transition: 0.6s ease-in-out; }
         .link-card:hover::before { left: 150%; }
-
-        .link-card:hover { 
-            background: var(--card-hover); 
-            transform: translateY(-6px) scale(1.015);
-            border-color: rgba(255,255,255,0.15);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(41, 151, 255, 0.15);
-        }
-        .link-card:active { transform: scale(0.96); transition: 0.1s; }
-        
+        .link-card:hover { background: var(--card-hover); transform: translateY(-6px) scale(1.015); border-color: rgba(255,255,255,0.15); box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(41, 151, 255, 0.15); }
         .link-card.special-access { background: rgba(255, 159, 10, 0.08); border-color: rgba(255, 159, 10, 0.2); }
         .link-card.special-access:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(255, 159, 10, 0.2); }
-        
         .group-divider { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 5px 10px; font-weight: 600; display: flex; align-items: center; }
         .group-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.05); margin-left: 15px; }
-
-        .link-icon { font-size: 1.6rem; margin-right: 18px; width: 35px; text-align: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .link-icon { font-size: 1.6rem; margin-right: 18px; width: 35px; text-align: center; transition: transform 0.3s; }
         .link-card:hover .link-icon { transform: scale(1.2) rotate(-5deg); }
         .link-text { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; }
-        
-        .badge { margin-left: auto; font-size: 0.75rem; padding: 5px 12px; border-radius: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .badge { margin-left: auto; font-size: 0.75rem; padding: 5px 12px; border-radius: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
         .badge-vip { background: linear-gradient(135deg, rgba(255, 159, 10, 0.2), rgba(255, 69, 58, 0.2)); color: var(--accent-special); border: 1px solid rgba(255, 159, 10, 0.3); }
 
-        /* --- Unlock Button --- */
+        /* --- Unlock / Login Button --- */
         .unlock-btn {
-            position: fixed; bottom: 35px; right: 35px;
-            background: rgba(20, 20, 22, 0.85); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
-            color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%;
-            width: 55px; height: 55px; display: flex; justify-content: center; align-items: center;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; cursor: pointer; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4); font-size: 1.3rem;
+            position: fixed; bottom: 35px; right: 35px; background: rgba(20, 20, 22, 0.85); backdrop-filter: saturate(180%) blur(20px); 
+            -webkit-backdrop-filter: saturate(180%) blur(20px); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 50%; width: 55px; height: 55px; display: flex; justify-content: center; align-items: center;
+            transition: all 0.4s; z-index: 100; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.4); font-size: 1.3rem;
         }
         .unlock-btn:hover { background: rgba(40, 40, 45, 0.9); color: var(--text-main); transform: scale(1.1) translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
         .unlock-btn.active { color: var(--accent-special); border-color: rgba(255, 159, 10, 0.4); box-shadow: 0 0 20px rgba(255, 159, 10, 0.3); }
 
         /* --- Modals --- */
-        .modal {
-            display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            justify-content: center; align-items: center; padding: 20px;
-        }
-        .modal-content {
-            background: rgba(20, 20, 22, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px;
-            padding: 35px; width: 100%; max-width: 420px; text-align: left; position: relative;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.7); animation: modalZoom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(15px); justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: rgba(20, 20, 22, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; padding: 35px; width: 100%; max-width: 420px; text-align: left; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.7); animation: modalZoom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes modalZoom { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
         .close-modal { position: absolute; top: 20px; right: 25px; color: var(--text-muted); cursor: pointer; font-size: 1.8rem; transition: 0.3s; }
         .close-modal:hover { color: var(--text-main); transform: rotate(90deg); }
         .modal h2 { margin-top: 0; font-size: 1.5rem; margin-bottom: 15px; font-weight: 700; background: linear-gradient(90deg, #fff, #86868b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .modal p { color: var(--text-muted); line-height: 1.7; font-size: 1rem; white-space: pre-wrap; }
 
-        /* --- Status Modal List --- */
         .status-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-        .status-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); 
-            color: var(--text-main); font-size: 0.95rem; 
-        }
+        .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-main); font-size: 0.95rem; }
         .status-item:last-child { border-bottom: none; }
-        .status-badge { 
-            padding: 5px 12px; border-radius: 12px; font-size: 0.75rem; 
-            font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; 
-        }
+        .status-badge { padding: 5px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .status-badge.status-ok { background: rgba(52, 199, 89, 0.15); color: #34c759; border: 1px solid rgba(52,199,89,0.3); }
         .status-badge.status-error { background: rgba(255, 59, 48, 0.15); color: #ff3b30; border: 1px solid rgba(255,59,48,0.3); }
         .status-badge.status-checking { background: rgba(255, 204, 0, 0.15); color: #ffcc00; border: 1px solid rgba(255,204,0,0.3); }
 
-        /* Animations */
         .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .fade-in.visible { opacity: 1; transform: translateY(0); }
-
-        .loader {
-            border: 3px solid rgba(255,255,255,0.05); border-radius: 50%;
-            border-top: 3px solid var(--accent); width: 40px; height: 40px;
-            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite; margin: 30px auto;
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
+        .loader { border: 3px solid rgba(255,255,255,0.05); border-radius: 50%; border-top: 3px solid var(--accent); width: 40px; height: 40px; animation: spin 1s infinite; margin: 30px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 500px) {
-            .status-text { display: none; } /* ซ่อนข้อความสถานะในมือถือให้เหลือแต่จุด */
+            .status-text { display: none; }
             .nav-logo span { display: none; } 
             .unlock-btn { bottom: 25px; right: 25px; width: 50px; height: 50px; }
             h1 { font-size: 24px; }
@@ -284,7 +176,6 @@
                 </div>
                 <div class="dropdown-content" id="apps-dropdown-list"></div>
             </div>
-
             <div class="menu-link" onclick="openAbout()">About</div>
         </div>
         
@@ -293,9 +184,8 @@
                 <div class="status-dot checking" id="nav-status-dot"></div>
                 <div class="status-text" id="nav-status-text">Checking...</div>
             </div>
-
             <div class="nav-clock" id="nav-clock">00:00</div>
-            <div class="nav-user-container">
+            <div class="nav-user-container" onclick="handleAuthClick()">
                 <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
             </div>
         </div>
@@ -314,13 +204,13 @@
 
     <div class="video-container fade-in" id="featured-video">
         <div class="video-wrapper">
-            <iframe id="youtube-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe id="youtube-iframe" src="" frameborder="0" allowfullscreen></iframe>
         </div>
     </div>
 
     <div class="container" id="links-container">
         <div class="loader"></div>
-        <div style="text-align: center; color: var(--text-muted); margin-top: 10px; letter-spacing: 0.05em; font-size: 0.9rem;">LOADING DATA...</div>
+        <div style="text-align: center; color: var(--text-muted); margin-top: 10px; font-size: 0.9rem;">LOADING DATA...</div>
     </div>
 
     <div id="about-modal" class="modal">
@@ -334,128 +224,107 @@
     <div id="status-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeStatus()">&times;</span>
-            <h2><i class="fas fa-server" style="margin-right: 10px; font-size: 1.2rem;"></i>System Status</h2>
+            <h2><i class="fas fa-server" style="margin-right: 10px;"></i>System Status</h2>
             <div class="status-list">
-                <div class="status-item">
-                    <span><i class="fas fa-globe" style="margin-right:8px; color:var(--text-muted);"></i>Web Interface</span>
-                    <span class="status-badge status-ok">Operational</span>
-                </div>
-                <div class="status-item">
-                    <span><i class="fas fa-database" style="margin-right:8px; color:var(--text-muted);"></i>Database (API)</span>
-                    <span class="status-badge status-checking" id="badge-api">Checking...</span>
-                </div>
-                <div class="status-item">
-                    <span><i class="fas fa-photo-video" style="margin-right:8px; color:var(--text-muted);"></i>Media Components</span>
-                    <span class="status-badge status-checking" id="badge-media">Checking...</span>
-                </div>
+                <div class="status-item"><span><i class="fas fa-globe" style="margin-right:8px; color:var(--text-muted);"></i>Web Interface</span><span class="status-badge status-ok">Operational</span></div>
+                <div class="status-item"><span><i class="fas fa-database" style="margin-right:8px; color:var(--text-muted);"></i>Database (API)</span><span class="status-badge status-checking" id="badge-api">Checking...</span></div>
+                <div class="status-item"><span><i class="fas fa-photo-video" style="margin-right:8px; color:var(--text-muted);"></i>Media Components</span><span class="status-badge status-checking" id="badge-media">Checking...</span></div>
             </div>
-            <p style="font-size: 0.8rem; margin-top: 20px; text-align: center; opacity: 0.7;">
-                Auto-updates every time the page loads.
-            </p>
         </div>
     </div>
 
-    <button class="unlock-btn" id="unlockBtn" onclick="handleUnlock()">
+    <div id="login-modal" class="modal">
+        <div class="modal-content" style="text-align: center; padding-top: 45px;">
+            <span class="close-modal" onclick="closeLogin()">&times;</span>
+            <h2 style="justify-content: center; display: flex; align-items: center; gap: 10px;"><i class="fas fa-user-circle"></i> User Sign In</h2>
+            <p style="margin-bottom: 25px; font-size: 0.95rem;">ล็อกอินด้วยบัญชี Google เพื่อเข้าถึงลิงก์พิเศษระดับส่วนตัว</p>
+            
+            <div style="display: flex; justify-content: center; margin-bottom: 10px;">
+                <div id="g_id_onload"
+                     data-client_id="906677442222-kmjgsmta70n24aoaq7osm9c1l7g1fb89.apps.googleusercontent.com"
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="pill"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left">
+                </div>
+            </div>
+            </div>
+    </div>
+
+    <button class="unlock-btn" id="unlockBtn" onclick="handleAuthClick()">
         <i class="fas fa-lock"></i>
     </button>
 
     <script>
+        // API เดิมของคุณมีน
         const API_URL = "https://script.google.com/macros/s/AKfycbzXB_CssFkIeViXfeLq1Ap9a2Q_WvNx29bbRxYKm8UVszGNRg47gPP9lT6sHkpxFfMjsA/exec";
 
         let currentAccessGroup = 'public';
-        let accessRules = {};
-        let aboutTextContent = '';
         let globalAllLinks = [];
-        let systemStatus = { api: 'checking', media: 'checking' }; // สถานะเริ่มต้น
+        let aboutTextContent = '';
+        let systemStatus = { api: 'checking', media: 'checking' };
+        
+        // สถานะ User
+        let isLoggedIn = false;
+        let currentUser = null;
 
         // --- System Status Controllers ---
-        function updateSystemStatus(component, status) {
-            systemStatus[component] = status;
-            renderOverallStatus();
-        }
-
+        function updateSystemStatus(component, status) { systemStatus[component] = status; renderOverallStatus(); }
         function renderOverallStatus() {
             const dot = document.getElementById('nav-status-dot');
             const text = document.getElementById('nav-status-text');
             const badgeApi = document.getElementById('badge-api');
             const badgeMedia = document.getElementById('badge-media');
-
-            // อัปเดตป้ายใน Modal
-            updateBadge(badgeApi, systemStatus.api);
-            updateBadge(badgeMedia, systemStatus.media);
-
-            // คำนวณสถานะรวมของเว็บ
+            updateBadge(badgeApi, systemStatus.api); updateBadge(badgeMedia, systemStatus.media);
             if (systemStatus.api === 'error' || systemStatus.media === 'error') {
-                dot.className = 'status-dot error';
-                text.innerText = 'System Issue';
-                text.style.color = '#ff3b30';
+                dot.className = 'status-dot error'; text.innerText = 'System Issue'; text.style.color = '#ff3b30';
             } else if (systemStatus.api === 'checking' || systemStatus.media === 'checking') {
-                dot.className = 'status-dot checking';
-                text.innerText = 'Checking...';
-                text.style.color = '#ffcc00';
+                dot.className = 'status-dot checking'; text.innerText = 'Checking...'; text.style.color = '#ffcc00';
             } else {
-                dot.className = 'status-dot ok';
-                text.innerText = 'All Systems Normal';
-                text.style.color = '#34c759';
+                dot.className = 'status-dot ok'; text.innerText = 'All Systems Normal'; text.style.color = '#34c759';
             }
         }
-
         function updateBadge(element, status) {
-            if (status === 'ok') {
-                element.className = 'status-badge status-ok';
-                element.innerText = 'Operational';
-            } else if (status === 'error') {
-                element.className = 'status-badge status-error';
-                element.innerText = 'Outage';
-            } else {
-                element.className = 'status-badge status-checking';
-                element.innerText = 'Checking...';
-            }
+            if (status === 'ok') { element.className = 'status-badge status-ok'; element.innerText = 'Operational'; } 
+            else if (status === 'error') { element.className = 'status-badge status-error'; element.innerText = 'Outage'; } 
+            else { element.className = 'status-badge status-checking'; element.innerText = 'Checking...'; }
         }
 
-        // --- Intersection Observer (Animation) ---
+        // --- Animation Observer ---
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry, index) => { 
-                if (entry.isIntersecting) {
-                    setTimeout(() => {
-                        entry.target.classList.add('visible');
-                    }, index * 80); 
-                }
+                if (entry.isIntersecting) setTimeout(() => { entry.target.classList.add('visible'); }, index * 80); 
             });
         }, { threshold: 0.1 });
-        
         document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
 
-        // --- UI Interactions ---
-        function toggleDropdown() {
-            document.getElementById("apps-dropdown-list").classList.toggle("show");
-            document.querySelector(".dropbtn").classList.toggle("active");
-        }
-        
-        function openAbout() {
-            document.getElementById('modal-text').innerText = aboutTextContent || "No information provided.";
-            document.getElementById('about-modal').style.display = "flex";
-        }
+        // --- UI Modals ---
+        function toggleDropdown() { document.getElementById("apps-dropdown-list").classList.toggle("show"); document.querySelector(".dropbtn").classList.toggle("active"); }
+        function openAbout() { document.getElementById('modal-text').innerText = aboutTextContent || "No info."; document.getElementById('about-modal').style.display = "flex"; }
         function closeAbout() { document.getElementById('about-modal').style.display = "none"; }
-        
         function openStatus() { document.getElementById('status-modal').style.display = "flex"; }
         function closeStatus() { document.getElementById('status-modal').style.display = "none"; }
+        function openLogin() { document.getElementById('login-modal').style.display = "flex"; }
+        function closeLogin() { document.getElementById('login-modal').style.display = "none"; }
 
-        // ปิด Dropdown หรือ Modal เมื่อคลิกพื้นที่ว่าง
         window.onclick = function(event) {
             if (!event.target.closest('.dropdown') && !event.target.classList.contains('dropbtn')) {
                 var dropdowns = document.getElementsByClassName("dropdown-content");
                 var btn = document.querySelector(".dropbtn");
                 if(btn) btn.classList.remove("active");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
-                }
+                for (var i = 0; i < dropdowns.length; i++) dropdowns[i].classList.remove('show');
             }
-            
-            const aboutModal = document.getElementById('about-modal');
-            const statusModal = document.getElementById('status-modal');
-            if (event.target == aboutModal) aboutModal.style.display = "none";
-            if (event.target == statusModal) statusModal.style.display = "none";
+            if (event.target == document.getElementById('about-modal')) closeAbout();
+            if (event.target == document.getElementById('status-modal')) closeStatus();
+            if (event.target == document.getElementById('login-modal')) closeLogin();
         }
 
         function searchLinks() {
@@ -466,89 +335,108 @@
 
         function updateClock() {
             const now = new Date();
-            const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            document.getElementById('nav-clock').innerText = timeString;
+            document.getElementById('nav-clock').innerText = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
         setInterval(updateClock, 1000); updateClock();
 
-        // --- Fetch Data ---
-        async function loadData() {
+        // --- GOOGLE AUTHENTICATION LOGIC ---
+        function decodeJwtResponse(token) {
+            var base64Url = token.split('.')[1];
+            var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        }
+
+        function handleCredentialResponse(response) {
+            const payload = decodeJwtResponse(response.credential);
+            closeLogin();
+            
+            // เรียกโหลดข้อมูลใหม่พร้อมส่ง Email ไปที่ Apps Script
+            updateSystemStatus('api', 'checking');
+            document.getElementById('links-container').innerHTML = '<div class="loader"></div><div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Authenticating...</div>';
+            
+            loadData(payload.email, payload.name, payload.picture);
+        }
+
+        function handleAuthClick() {
+            if (isLoggedIn) {
+                if(confirm("🔒 คุณต้องการออกจากระบบ (Logout) หรือไม่?")) {
+                    isLoggedIn = false; currentUser = null; currentAccessGroup = 'public';
+                    document.getElementById('unlockBtn').classList.remove('active');
+                    document.getElementById('unlockBtn').innerHTML = '<i class="fas fa-lock"></i>';
+                    alert("ออกจากระบบเรียบร้อยแล้ว");
+                    renderLinks(globalAllLinks); 
+                }
+            } else { openLogin(); }
+        }
+
+        // --- Fetch Data (อัปเดตเพื่อรองรับ Email) ---
+        async function loadData(userEmail = '', userName = '', userPic = '') {
             try {
-                const response = await fetch(API_URL);
+                let fetchUrl = API_URL;
+                // ถ้ามีการล็อกอิน ให้แนบ email และ name ไปด้วย
+                if (userEmail) fetchUrl += `?email=${encodeURIComponent(userEmail)}&name=${encodeURIComponent(userName)}`;
+
+                const response = await fetch(fetchUrl);
                 if (!response.ok) throw new Error('Network Issue');
                 const data = await response.json();
 
-                // ถ้าโหลดผ่าน อัปเดตสถานะเป็น OK
-                updateSystemStatus('api', 'ok');
-                updateSystemStatus('media', 'ok');
+                updateSystemStatus('api', 'ok'); updateSystemStatus('media', 'ok');
+
+                // จัดการข้อมูล User ที่ส่งกลับมาจาก Apps Script
+                if (userEmail && data.user) {
+                    isLoggedIn = true;
+                    currentAccessGroup = data.user.role || 'public';
+                    currentUser = { email: data.user.email, role: data.user.role, pic: userPic };
+                    
+                    document.getElementById('unlockBtn').classList.add('active');
+                    document.getElementById('unlockBtn').innerHTML = '<i class="fas fa-unlock"></i>';
+                }
 
                 if(data.profile) {
                     document.getElementById('profile-name').innerText = data.profile.name || 'My Portfolio';
                     document.getElementById('profile-bio').innerText = data.profile.bio || '';
                     document.getElementById('main-profile-img').src = data.profile.imageUrl || 'https://ui-avatars.com/api/?name=M&background=random';
                     aboutTextContent = data.profile.aboutText || '';
-                    renderVideo(data.profile.videoUrl);
+                    if(data.profile.videoUrl) {
+                        const match = data.profile.videoUrl.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+                        if(match && match[2].length === 11) {
+                            document.getElementById('youtube-iframe').src = `https://www.youtube.com/embed/${match[2]}`;
+                            document.getElementById('featured-video').style.display = 'block';
+                        }
+                    }
                 }
 
-                const menuContainer = document.getElementById('apps-dropdown-list');
-                menuContainer.innerHTML = '';
+                const menuContainer = document.getElementById('apps-dropdown-list'); menuContainer.innerHTML = '';
                 if(data.apps && data.apps.length > 0) {
-                    data.apps.forEach(app => {
-                        menuContainer.innerHTML += `<a href="${app.url}" target="_blank">${app.name}</a>`;
-                    });
-                } else {
-                    menuContainer.innerHTML = '<a href="#" style="color:var(--text-muted); padding-left:20px;">No Apps</a>';
-                }
+                    data.apps.forEach(app => menuContainer.innerHTML += `<a href="${app.url}" target="_blank">${app.name}</a>`);
+                } else menuContainer.innerHTML = '<a href="#" style="color:var(--text-muted); padding-left:20px;">No Apps</a>';
 
-                if(data.accessRules) accessRules = data.accessRules;
-
-                if(data.links) {
-                    globalAllLinks = data.links;
-                    renderLinks(globalAllLinks);
-                }
+                if(data.links) { globalAllLinks = data.links; renderLinks(globalAllLinks); }
 
             } catch (error) {
                 console.error("Error loading data:", error);
-                
-                // ถ้ามีปัญหา อัปเดตสถานะเป็น Error
-                updateSystemStatus('api', 'error');
-                updateSystemStatus('media', 'error');
-                
-                document.getElementById('links-container').innerHTML = `
-                    <div style="text-align:center; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); padding: 20px; border-radius: 20px; color: #ff3b30; margin-top: 10px;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px;"></i>
-                        <h3 style="margin-bottom: 5px;">Connection Failed</h3>
-                        <p style="font-size: 0.9rem; opacity: 0.8;">เกิดข้อผิดพลาดในการโหลดข้อมูลจาก Database หรือ Google Sheets อาจมีปัญหา</p>
-                    </div>`;
+                updateSystemStatus('api', 'error'); updateSystemStatus('media', 'error');
+                document.getElementById('links-container').innerHTML = `<div style="text-align:center; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); padding: 20px; border-radius: 20px; color: #ff3b30; margin-top: 10px;"><i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 15px;"></i><h3 style="margin-bottom: 5px;">Connection Failed</h3><p style="font-size: 0.9rem; opacity: 0.8;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p></div>`;
             }
         }
 
-        // --- Render Functions ---
+        // --- Render Links ---
         function renderLinks(linksData) {
-            const container = document.getElementById('links-container');
-            container.innerHTML = ''; 
-
-            if(!linksData || linksData.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">No links found</p>';
-                return;
-            }
+            const container = document.getElementById('links-container'); container.innerHTML = ''; 
+            if(!linksData || linksData.length === 0) { container.innerHTML = '<p style="text-align:center; color: var(--text-muted);">No links found</p>'; return; }
 
             const visibleLinks = linksData.filter(link => {
-                const groupString = link.group ? link.group.toLowerCase() : 'public';
-                const allowedGroups = groupString.split(',').map(g => g.trim());
-                return allowedGroups.includes('public') || allowedGroups.includes(currentAccessGroup);
+                const groups = (link.group || 'public').toLowerCase().split(',').map(g => g.trim());
+                return groups.includes('public') || groups.includes(currentAccessGroup);
             });
-
             const specialLinks = visibleLinks.filter(link => {
-                const groupString = link.group ? link.group.toLowerCase() : 'public';
-                const allowedGroups = groupString.split(',').map(g => g.trim());
-                return !allowedGroups.includes('public') && allowedGroups.includes(currentAccessGroup);
+                const groups = (link.group || 'public').toLowerCase().split(',').map(g => g.trim());
+                return !groups.includes('public') && groups.includes(currentAccessGroup);
             });
-            
-            const publicLinks = visibleLinks.filter(link => {
-                const groupString = link.group ? link.group.toLowerCase() : 'public';
-                return groupString.includes('public');
-            });
+            const publicLinks = visibleLinks.filter(link => (link.group || 'public').toLowerCase().includes('public'));
 
             if (specialLinks.length > 0) {
                 container.innerHTML += `<div class="group-divider fade-in">Unlocked Access: ${currentAccessGroup}</div>`;
@@ -563,80 +451,42 @@
             updateNavbarImage();
         }
 
-        function renderVideo(url) {
-            const videoContainer = document.getElementById('featured-video');
-            const iframe = document.getElementById('youtube-iframe');
-            if (url) {
-                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-                const match = url.match(regExp);
-                const videoId = (match && match[2].length === 11) ? match[2] : null;
-                if (videoId) {
-                    iframe.src = `https://www.youtube.com/embed/${videoId}`;
-                    videoContainer.style.display = 'block';
-                } else { videoContainer.style.display = 'none'; }
-            } else { videoContainer.style.display = 'none'; }
-        }
-
         function renderLinkItem(container, link, isSpecial) {
             const iconClass = link.icon || 'fas fa-link';
             const specialClass = isSpecial ? 'special-access' : '';
-            const badge = isSpecial ? `<span class="badge badge-vip"><i class="fas fa-unlock-alt" style="margin-right:6px;"></i>${currentAccessGroup}</span>` : '';
-            
-            let iconColorStyle = '';
-            const iconLower = iconClass.toLowerCase();
-            if(iconLower.includes('facebook')) iconColorStyle = 'color: #1877F2; text-shadow: 0 0 10px rgba(24,119,242,0.5);';
-            else if(iconLower.includes('youtube')) iconColorStyle = 'color: #FF0000; text-shadow: 0 0 10px rgba(255,0,0,0.5);';
-            else if(iconLower.includes('instagram')) iconColorStyle = 'color: #E4405F; text-shadow: 0 0 10px rgba(228,64,95,0.5);';
-            else if(iconLower.includes('line')) iconColorStyle = 'color: #00C300; text-shadow: 0 0 10px rgba(0,195,0,0.5);';
-            else if(iconLower.includes('tiktok')) iconColorStyle = 'color: #ffffff; text-shadow: 1px 1px 0 #00f2ea, -1px -1px 0 #ff0050, 0 0 10px rgba(255,255,255,0.5);';
+            const badge = isSpecial ? `<span class="badge badge-vip"><i class="fas fa-check-circle" style="margin-right:6px;"></i>${currentAccessGroup}</span>` : '';
+            let iconColorStyle = ''; const iconLower = iconClass.toLowerCase();
+            if(iconLower.includes('facebook')) iconColorStyle = 'color: #1877F2;';
+            else if(iconLower.includes('youtube')) iconColorStyle = 'color: #FF0000;';
+            else if(iconLower.includes('instagram')) iconColorStyle = 'color: #E4405F;';
+            else if(iconLower.includes('line')) iconColorStyle = 'color: #00C300;';
+            else if(iconLower.includes('tiktok')) iconColorStyle = 'color: #ffffff;';
             else if(iconLower.includes('github')) iconColorStyle = 'color: #ffffff;';
             else iconColorStyle = 'color: var(--accent);';
 
-            const html = `
+            container.innerHTML += `
                 <a href="${link.url}" target="_blank" class="link-card fade-in ${specialClass}">
                     <div class="link-icon"><i class="${iconClass}" style="${iconColorStyle}"></i></div>
                     <div class="link-text">${link.title}</div>
                     ${badge}
-                </a>
-            `;
-            container.innerHTML += html;
-        }
-
-        function handleUnlock() {
-            if (currentAccessGroup !== 'public') {
-                currentAccessGroup = 'public';
-                alert("🔒 ล็อคระบบแล้ว (Locked)");
-                document.getElementById('unlockBtn').classList.remove('active');
-                document.getElementById('unlockBtn').innerHTML = '<i class="fas fa-lock"></i>';
-                renderLinks(globalAllLinks); 
-            } else {
-                const input = prompt("🔑 กรุณาใส่รหัสผ่านเข้าถึง (Enter Passcode):");
-                if (input && accessRules[input]) {
-                    currentAccessGroup = accessRules[input].toLowerCase();
-                    document.getElementById('unlockBtn').classList.add('active');
-                    document.getElementById('unlockBtn').innerHTML = '<i class="fas fa-unlock"></i>';
-                    renderLinks(globalAllLinks); 
-                } else if (input) {
-                    alert("❌ รหัสไม่ถูกต้อง (Incorrect Passcode)");
-                }
-            }
+                </a>`;
         }
 
         function updateNavbarImage() {
             const navImg = document.getElementById('nav-profile-img');
-            if (currentAccessGroup !== 'public') {
+            if (isLoggedIn && currentUser && currentUser.pic) {
+                navImg.src = currentUser.pic;
                 navImg.style.borderColor = "var(--accent-special)";
                 navImg.style.boxShadow = "0 0 15px rgba(255, 159, 10, 0.4)";
-                navImg.src = "https://ui-avatars.com/api/?name=VIP&background=ff9f0a&color=fff";
             } else {
                 navImg.style.borderColor = "rgba(255,255,255,0.1)";
                 navImg.style.boxShadow = "none";
-                navImg.src = document.getElementById('main-profile-img').src;
+                navImg.src = document.getElementById('main-profile-img').src || 'https://ui-avatars.com/api/?name=User';
             }
         }
 
         // --- Init ---
-        renderOverallStatus(); // แสดงสถานะ Checking ตั้งแต่โหลดหน้า
+        renderOverallStatus();
         loadData();
     </script>
 </body>
