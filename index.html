@@ -142,8 +142,7 @@
                 <div class="menu-link dropbtn" onclick="toggleSimulateDropdown()" style="color: #34c759; font-weight: bold;">
                     <i class="fas fa-eye" style="margin-right: 4px;"></i> <span id="view-as-text">View As: ADMIN</span> <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i>
                 </div>
-                <div class="dropdown-content" id="simulate-dropdown-list">
-                    </div>
+                <div class="dropdown-content" id="simulate-dropdown-list"></div>
             </div>
 
             <div class="menu-link" onclick="openAbout()">About</div>
@@ -160,7 +159,7 @@
     <div class="profile-section fade-in" id="profile-section">
         <img src="" class="profile-img" id="main-profile-img" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'">
         <h1 id="profile-name">...</h1>
-        <p class="bio" id="profile-bio">...</p>
+        <p class="bio" id="profile-bio">...<br><br></p>
     </div>
 
     <div class="search-container fade-in">
@@ -208,6 +207,18 @@
         </div>
     </div>
 
+    <div id="ask-note-modal" class="modal">
+        <div class="modal-content" style="text-align: center; padding-top: 40px;">
+            <span class="close-modal" onclick="document.getElementById('ask-note-modal').style.display='none'">&times;</span>
+            <h2 style="color: var(--accent-special);"><i class="fas fa-hand-sparkles"></i> ยินดีต้อนรับ!</h2>
+            <p style="margin-bottom: 20px; font-size: 0.95rem;">ระบบพบว่าคุณเป็นผู้ใช้งานใหม่<br>กรุณาบอกแอดมินสักนิดว่าคุณคือใคร (เพื่อให้แอดมินปลดล็อคสิทธิ์ให้ถูกต้อง)</p>
+            <input type="text" id="new-user-note" class="search-input" placeholder="เช่น: ผมเพื่อนแอดมินเองครับ, หรือชื่อเล่น" style="width: 100%; margin-bottom: 20px; text-align: center;">
+            <button onclick="submitNewRegistration()" style="background: var(--accent); color: #fff; border: none; padding: 14px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; transition: 0.3s;">
+                <i class="fas fa-paper-plane" style="margin-right: 5px;"></i> ส่งข้อความ & เข้าสู่ระบบ
+            </button>
+        </div>
+    </div>
+
     <div id="admin-dashboard-modal" class="modal">
         <div class="modal-content" style="max-width: 550px;">
             <span class="close-modal" onclick="closeAdminDashboard()">&times;</span>
@@ -217,9 +228,7 @@
                 <button class="admin-tab active" id="tab-btn-links" onclick="switchAdminTab('links')">🔗 Links Auth</button>
                 <button class="admin-tab" id="tab-btn-users" onclick="switchAdminTab('users')">👥 User Roles</button>
             </div>
-
             <div id="admin-tab-links" class="admin-list"></div>
-
             <div id="admin-tab-users" class="admin-list" style="display: none;"></div>
         </div>
     </div>
@@ -248,6 +257,7 @@
         let systemStatus = { api: 'checking', media: 'checking' };
         let isLoggedIn = false;
         let currentUser = null;
+        let tempUserPayload = null; // เก็บข้อมูลชั่วคราวตอนรอกรอก Note
 
         // --- Basic UI & Status ---
         function updateSystemStatus(c, s) { systemStatus[c] = s; renderOverallStatus(); }
@@ -264,14 +274,8 @@
         document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
 
         // --- Dropdowns & Modals ---
-        function toggleAppDropdown() { 
-            document.getElementById("apps-dropdown-list").classList.toggle("show"); 
-            document.getElementById("simulate-dropdown-list").classList.remove("show");
-        }
-        function toggleSimulateDropdown() { 
-            document.getElementById("simulate-dropdown-list").classList.toggle("show"); 
-            document.getElementById("apps-dropdown-list").classList.remove("show");
-        }
+        function toggleAppDropdown() { document.getElementById("apps-dropdown-list").classList.toggle("show"); document.getElementById("simulate-dropdown-list").classList.remove("show"); }
+        function toggleSimulateDropdown() { document.getElementById("simulate-dropdown-list").classList.toggle("show"); document.getElementById("apps-dropdown-list").classList.remove("show"); }
         
         function openAbout() { document.getElementById('modal-text').innerText = aboutTextContent || "No info."; document.getElementById('about-modal').style.display="flex"; }
         function closeAbout() { document.getElementById('about-modal').style.display="none"; }
@@ -283,15 +287,13 @@
         function closeAdminDashboard() { document.getElementById('admin-dashboard-modal').style.display="none"; }
 
         window.onclick = function(event) {
-            if (!event.target.closest('.dropdown')) {
-                var d = document.getElementsByClassName("dropdown-content");
-                for (var i=0; i<d.length; i++) d[i].classList.remove('show');
-            }
+            if (!event.target.closest('.dropdown')) { var d = document.getElementsByClassName("dropdown-content"); for (var i=0; i<d.length; i++) d[i].classList.remove('show'); }
             if(event.target == document.getElementById('about-modal')) closeAbout();
             if(event.target == document.getElementById('status-modal')) closeStatus();
             if(event.target == document.getElementById('login-modal')) closeLogin();
             if(event.target == document.getElementById('user-profile-modal')) closeUserProfile();
             if(event.target == document.getElementById('admin-dashboard-modal')) closeAdminDashboard();
+            if(event.target == document.getElementById('ask-note-modal')) document.getElementById('ask-note-modal').style.display='none';
         }
 
         function searchLinks() { const t = document.getElementById('search-input').value.toLowerCase(); renderLinks(globalAllLinks.filter(l => l.title.toLowerCase().includes(t))); }
@@ -299,36 +301,23 @@
 
         // --- Simulate Role Logic ---
         function extractUniqueRoles() {
-            const roles = new Set(['admin', 'public']); // ค่าพื้นฐาน
-            globalAllLinks.forEach(link => {
-                if (link.group) link.group.split(',').forEach(g => roles.add(g.trim().toLowerCase()));
-            });
-            globalAllUsers.forEach(user => {
-                if (user.role) roles.add(user.role.toLowerCase());
-            });
+            const roles = new Set(['admin', 'public']); 
+            globalAllLinks.forEach(link => { if (link.group) link.group.split(',').forEach(g => roles.add(g.trim().toLowerCase())); });
+            globalAllUsers.forEach(user => { if (user.role) roles.add(user.role.toLowerCase()); });
             return Array.from(roles);
         }
-
         function buildSimulateMenu() {
             const menu = document.getElementById('admin-simulate-dropdown');
             if (isLoggedIn && currentUser && currentUser.role === 'admin') {
                 menu.style.display = 'block';
-                const list = document.getElementById('simulate-dropdown-list');
-                list.innerHTML = '';
-                const roles = extractUniqueRoles();
-                roles.forEach(r => {
-                    list.innerHTML += `<a href="#" onclick="simulateRole('${r}')">${r.toUpperCase()}</a>`;
-                });
-            } else {
-                menu.style.display = 'none';
-            }
+                const list = document.getElementById('simulate-dropdown-list'); list.innerHTML = '';
+                extractUniqueRoles().forEach(r => list.innerHTML += `<a href="#" onclick="simulateRole('${r}')">${r.toUpperCase()}</a>`);
+            } else { menu.style.display = 'none'; }
         }
-
         function simulateRole(role) {
             currentAccessGroup = role;
             document.getElementById('view-as-text').innerText = `View As: ${role.toUpperCase()}`;
-            renderLinks(globalAllLinks);
-            document.getElementById("simulate-dropdown-list").classList.remove("show");
+            renderLinks(globalAllLinks); document.getElementById("simulate-dropdown-list").classList.remove("show");
         }
 
         // --- Auth & API Fetch ---
@@ -336,9 +325,17 @@
         
         function handleCredentialResponse(res) {
             const payload = decodeJwtResponse(res.credential); closeLogin();
+            tempUserPayload = payload; // เก็บข้อมูลรอก่อน
             updateSystemStatus('api', 'checking');
-            document.getElementById('links-container').innerHTML = '<div class="loader"></div><div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Authenticating...</div>';
-            loadData(payload.email, payload.name, payload.picture);
+            document.getElementById('links-container').innerHTML = '<div class="loader"></div><div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Checking Account...</div>';
+            loadData(payload.email, payload.name, payload.picture, null); // ส่ง null เพื่อเช็คก่อนว่าเก่าหรือใหม่
+        }
+        
+        function submitNewRegistration() {
+            const note = document.getElementById('new-user-note').value || "-";
+            document.getElementById('ask-note-modal').style.display = 'none';
+            document.getElementById('links-container').innerHTML = '<div class="loader"></div><div style="text-align: center; color: var(--text-muted); font-size: 0.9rem;">Registering...</div>';
+            loadData(tempUserPayload.email, tempUserPayload.name, tempUserPayload.picture, note);
         }
 
         function handleProfileClick() {
@@ -350,34 +347,37 @@
                 
                 const roleContainer = document.getElementById('modal-user-role-container');
                 const adminBtn = document.getElementById('admin-panel-btn');
-                
-                if(currentUser.role === 'admin') {
-                    roleContainer.style.background = 'rgba(52, 199, 89, 0.15)'; roleContainer.style.border = '1px solid rgba(52, 199, 89, 0.3)'; roleContainer.style.color = '#34c759';
-                    adminBtn.style.display = 'block'; 
-                } else {
-                    roleContainer.style.background = 'rgba(255,159,10,0.15)'; roleContainer.style.border = '1px solid rgba(255,159,10,0.3)'; roleContainer.style.color = 'var(--accent-special)';
-                    adminBtn.style.display = 'none'; 
-                }
+                if(currentUser.role === 'admin') { roleContainer.style.background = 'rgba(52, 199, 89, 0.15)'; roleContainer.style.border = '1px solid rgba(52, 199, 89, 0.3)'; roleContainer.style.color = '#34c759'; adminBtn.style.display = 'block'; } 
+                else { roleContainer.style.background = 'rgba(255,159,10,0.15)'; roleContainer.style.border = '1px solid rgba(255,159,10,0.3)'; roleContainer.style.color = 'var(--accent-special)'; adminBtn.style.display = 'none'; }
                 document.getElementById('user-profile-modal').style.display = "flex";
             } else { openLogin(); }
         }
 
         function logout() {
-            closeUserProfile(); isLoggedIn = false; currentUser = null; currentAccessGroup = 'public'; globalAllUsers = [];
+            closeUserProfile(); isLoggedIn = false; currentUser = null; currentAccessGroup = 'public'; globalAllUsers = []; tempUserPayload = null;
             const btn = document.getElementById('unlockBtn'); btn.classList.remove('active', 'admin-mode'); btn.innerHTML = '<i class="fas fa-lock"></i>';
             buildSimulateMenu(); renderLinks(globalAllLinks); updateNavbarImage();
         }
 
-        async function loadData(userEmail = '', userName = '', userPic = '') {
+        async function loadData(userEmail = '', userName = '', userPic = '', userNote = null) {
             try {
                 let fetchUrl = API_URL;
-                if (userEmail) fetchUrl += `?email=${encodeURIComponent(userEmail)}&name=${encodeURIComponent(userName)}`;
+                if (userEmail) {
+                    fetchUrl += `?email=${encodeURIComponent(userEmail)}&name=${encodeURIComponent(userName)}`;
+                    if (userNote !== null) fetchUrl += `&action=register&note=${encodeURIComponent(userNote)}`; // ส่งโหมดลงทะเบียน
+                }
 
                 const response = await fetch(fetchUrl);
                 if (!response.ok) throw new Error('Network Issue');
                 const data = await response.json();
-
                 updateSystemStatus('api', 'ok'); updateSystemStatus('media', 'ok');
+
+                // ถ้าระบบบอกว่าเป็นคนใหม่ ให้เปิดหน้าต่างถาม Note
+                if (data.requireRegistration) {
+                    document.getElementById('ask-note-modal').style.display = 'flex';
+                    renderLinks(globalAllLinks); // โหลดลิงก์ public กลับมาให้หน้าไม่ว่าง
+                    return;
+                }
 
                 if (userEmail && data.user) {
                     isLoggedIn = true; currentAccessGroup = data.user.role || 'public';
@@ -402,11 +402,10 @@
                 if(data.apps && data.apps.length > 0) data.apps.forEach(a => menu.innerHTML += `<a href="${a.url}" target="_blank">${a.name}</a>`);
                 else menu.innerHTML = '<a href="#" style="color:var(--text-muted); padding-left:20px;">No Apps</a>';
 
-                if(data.links) { globalAllLinks = data.links; }
-                if(data.allUsers) { globalAllUsers = data.allUsers; } 
+                if(data.links) globalAllLinks = data.links;
+                if(data.allUsers) globalAllUsers = data.allUsers; 
 
-                buildSimulateMenu(); // อัปเดตเมนู View As
-                renderLinks(globalAllLinks);
+                buildSimulateMenu(); renderLinks(globalAllLinks);
 
             } catch (error) {
                 console.error(error); updateSystemStatus('api', 'error'); updateSystemStatus('media', 'error');
@@ -415,34 +414,20 @@
         }
 
         // --- Admin Dashboard Logic ---
-        function openAdminDashboard() {
-            closeUserProfile();
-            renderAdminLinks();
-            renderAdminUsers();
-            document.getElementById('admin-dashboard-modal').style.display = "flex";
-        }
-
+        function openAdminDashboard() { closeUserProfile(); renderAdminLinks(); renderAdminUsers(); document.getElementById('admin-dashboard-modal').style.display = "flex"; }
         function switchAdminTab(tab) {
-            document.getElementById('tab-btn-links').classList.remove('active');
-            document.getElementById('tab-btn-users').classList.remove('active');
-            document.getElementById('admin-tab-links').style.display = 'none';
-            document.getElementById('admin-tab-users').style.display = 'none';
-            
-            document.getElementById('tab-btn-' + tab).classList.add('active');
-            document.getElementById('admin-tab-' + tab).style.display = 'block';
+            document.getElementById('tab-btn-links').classList.remove('active'); document.getElementById('tab-btn-users').classList.remove('active');
+            document.getElementById('admin-tab-links').style.display = 'none'; document.getElementById('admin-tab-users').style.display = 'none';
+            document.getElementById('tab-btn-' + tab).classList.add('active'); document.getElementById('admin-tab-' + tab).style.display = 'block';
         }
 
         function renderAdminLinks() {
-            const container = document.getElementById('admin-tab-links');
-            container.innerHTML = '';
+            const container = document.getElementById('admin-tab-links'); container.innerHTML = '';
             globalAllLinks.forEach((link, index) => {
                 const selectId = `admin-link-sel-${index}`;
                 container.innerHTML += `
                     <div class="admin-item">
-                        <div style="width: 60%;">
-                            <div class="admin-item-title">${link.title}</div>
-                            <div class="admin-item-subtitle"><i class="fas fa-link"></i> ${link.url.substring(0,25)}...</div>
-                        </div>
+                        <div style="width: 60%;"><div class="admin-item-title">${link.title}</div><div class="admin-item-subtitle"><i class="fas fa-link"></i> ${link.url.substring(0,25)}...</div></div>
                         <div style="display: flex; align-items: center;">
                             <input type="text" id="${selectId}" class="admin-select" value="${link.group || 'public'}" style="width: 80px;" placeholder="group">
                             <button class="admin-btn-save" onclick="updateAdminData('updateLink', '${link.title.replace(/'/g, "\\'")}', '${selectId}')">Save</button>
@@ -452,17 +437,17 @@
         }
 
         function renderAdminUsers() {
-            const container = document.getElementById('admin-tab-users');
-            container.innerHTML = '';
+            const container = document.getElementById('admin-tab-users'); container.innerHTML = '';
             if(globalAllUsers.length === 0) { container.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:20px;">No users found</p>'; return; }
             
             globalAllUsers.forEach((user, index) => {
                 const selectId = `admin-user-sel-${index}`;
+                // โชว์ Note ให้ Admin เห็นด้วย
                 container.innerHTML += `
                     <div class="admin-item">
                         <div style="width: 60%;">
                             <div class="admin-item-title">${user.name}</div>
-                            <div class="admin-item-subtitle">${user.email}</div>
+                            <div class="admin-item-subtitle">${user.email} <br> <span style="color: var(--accent-special); font-style: italic; font-size: 0.75rem;">📝 Note: ${user.note || '-'}</span></div>
                         </div>
                         <div style="display: flex; align-items: center;">
                             <select id="${selectId}" class="admin-select">
@@ -479,22 +464,16 @@
 
         async function updateAdminData(action, param1, selectId) {
             const param2 = document.getElementById(selectId).value; 
-            const btn = document.getElementById(selectId).nextElementSibling;
-            const originalText = btn.innerText;
-            btn.innerText = '...'; btn.disabled = true;
-
+            const btn = document.getElementById(selectId).nextElementSibling; const originalText = btn.innerText; btn.innerText = '...'; btn.disabled = true;
             try {
                 const url = `${API_URL}?email=${encodeURIComponent(currentUser.email)}&action=${action}&p1=${encodeURIComponent(param1)}&p2=${encodeURIComponent(param2)}`;
-                const response = await fetch(url);
-                const result = await response.json();
-
+                const response = await fetch(url); const result = await response.json();
                 if (result.success) {
                     btn.innerText = '✔'; btn.style.background = '#34c759';
                     setTimeout(() => { btn.innerText = originalText; btn.style.background = 'var(--accent)'; btn.disabled = false; loadData(currentUser.email, currentUser.name, currentUser.pic); }, 1500);
                 } else { throw new Error(result.message); }
             } catch(e) {
-                alert("เกิดข้อผิดพลาด: " + e.message);
-                btn.innerText = 'Failed'; btn.style.background = '#ff3b30';
+                alert("Error: " + e.message); btn.innerText = 'Failed'; btn.style.background = '#ff3b30';
                 setTimeout(() => { btn.innerText = originalText; btn.style.background = 'var(--accent)'; btn.disabled = false; }, 2000);
             }
         }
