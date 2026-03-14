@@ -440,9 +440,19 @@
             const container = document.getElementById('admin-tab-users'); container.innerHTML = '';
             if(globalAllUsers.length === 0) { container.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:20px;">No users found</p>'; return; }
             
+            const roles = extractUniqueRoles();
+
             globalAllUsers.forEach((user, index) => {
                 const selectId = `admin-user-sel-${index}`;
-                // โชว์ Note ให้ Admin เห็นด้วย
+                let optionsHtml = '';
+                
+                // สร้าง option จาก roles ที่ดึงมา
+                roles.forEach(r => {
+                    optionsHtml += `<option value="${r}" ${user.role === r ? 'selected' : ''}>${r.toUpperCase()}</option>`;
+                });
+                // เพิ่มตัวเลือกให้พิมพ์ role ใหม่เข้าไปได้ด้วย
+                optionsHtml += `<option value="new_custom_role">-- Custom Role --</option>`;
+
                 container.innerHTML += `
                     <div class="admin-item">
                         <div style="width: 60%;">
@@ -450,21 +460,38 @@
                             <div class="admin-item-subtitle">${user.email} <br> <span style="color: var(--accent-special); font-style: italic; font-size: 0.75rem;">📝 Note: ${user.note || '-'}</span></div>
                         </div>
                         <div style="display: flex; align-items: center;">
-                            <select id="${selectId}" class="admin-select">
-                                <option value="public" ${user.role==='public'?'selected':''}>Public</option>
-                                <option value="vip" ${user.role==='vip'?'selected':''}>VIP</option>
-                                <option value="family" ${user.role==='family'?'selected':''}>Family</option>
-                                <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
+                            <select id="${selectId}" class="admin-select" onchange="handleRoleSelectChange('${selectId}')">
+                                ${optionsHtml}
                             </select>
+                            <input type="text" id="${selectId}-custom" class="admin-select" style="display:none; width:80px; margin-left:5px;" placeholder="New Role">
                             <button class="admin-btn-save" onclick="updateAdminData('updateRole', '${user.email}', '${selectId}')">Save</button>
                         </div>
                     </div>`;
             });
         }
 
+        function handleRoleSelectChange(selectId) {
+            const selectEl = document.getElementById(selectId);
+            const customInputEl = document.getElementById(`${selectId}-custom`);
+            if (selectEl.value === 'new_custom_role') {
+                customInputEl.style.display = 'block';
+                customInputEl.focus();
+            } else {
+                customInputEl.style.display = 'none';
+            }
+        }
+
         async function updateAdminData(action, param1, selectId) {
-            const param2 = document.getElementById(selectId).value; 
-            const btn = document.getElementById(selectId).nextElementSibling; const originalText = btn.innerText; btn.innerText = '...'; btn.disabled = true;
+            let param2 = document.getElementById(selectId).value; 
+            
+            // ถ้าเลือก Custom Role ให้ดึงค่าจาก input แทน
+            if (param2 === 'new_custom_role') {
+                param2 = document.getElementById(`${selectId}-custom`).value;
+                if (!param2) { alert("กรุณาพิมพ์ชื่อ Role ใหม่ด้วยครับ"); return; }
+            }
+
+            const btn = document.getElementById(selectId).nextElementSibling.nextElementSibling || document.getElementById(selectId).nextElementSibling; // หาตำแหน่งปุ่ม Save
+            const originalText = btn.innerText; btn.innerText = '...'; btn.disabled = true;
             try {
                 const url = `${API_URL}?email=${encodeURIComponent(currentUser.email)}&action=${action}&p1=${encodeURIComponent(param1)}&p2=${encodeURIComponent(param2)}`;
                 const response = await fetch(url); const result = await response.json();
