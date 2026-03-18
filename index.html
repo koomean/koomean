@@ -18,7 +18,6 @@
         body::before { width: 400px; height: 400px; background: var(--accent-glow); top: -100px; left: -100px; }
         body::after { width: 500px; height: 500px; background: rgba(255, 159, 10, 0.15); bottom: -150px; right: -150px; animation-delay: -10s; }
         @keyframes floatOrb { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(100px, 50px) scale(1.2); } }
-
         .navbar { position: fixed; top: 0; left: 0; width: 100%; height: var(--navbar-height); background: rgba(10, 10, 12, 0.6); backdrop-filter: saturate(180%) blur(25px); display: flex; justify-content: space-between; align-items: center; padding: 0 25px; z-index: 1000; border-bottom: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); }
         .nav-left { display: flex; align-items: center; gap: 20px; }
         .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: transform 0.3s; }
@@ -31,7 +30,6 @@
         @keyframes fadeInDrop { from { opacity: 0; transform: translateY(-15px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .dropdown-content a { color: var(--text-main); padding: 14px 20px; text-decoration: none; display: block; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; }
         .dropdown-content a:hover { background: rgba(255,255,255,0.1); padding-left: 25px; color: var(--accent); }
-
         .nav-right { display: flex; align-items: center; gap: 18px; }
         .status-indicator { display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; font-weight: 600; transition: all 0.3s; }
         .status-indicator:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
@@ -40,19 +38,16 @@
         .status-dot.ok { background-color: #34c759; box-shadow: 0 0 10px rgba(52,199,89,0.5); }
         .status-dot.error { background-color: #ff3b30; box-shadow: 0 0 10px rgba(255,59,48,0.5); }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
         .nav-clock { font-variant-numeric: tabular-nums; font-size: 0.9rem; color: var(--text-muted); font-weight: 600; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
         .nav-user-container { cursor: pointer; display: flex; align-items: center; }
         .nav-profile-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); transition: all 0.3s; }
         .nav-profile-img:hover { transform: scale(1.1) rotate(5deg); border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
-
         .profile-section { text-align: center; margin-bottom: 40px; width: 100%; max-width: 600px; padding: 0 20px; }
         .profile-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; margin-bottom: 18px; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 0 20px var(--accent-glow); animation: profilePulse 3s infinite alternate; transition: transform 0.5s; }
         .profile-img:hover { transform: scale(1.05); }
         @keyframes profilePulse { 0% { box-shadow: 0 0 15px rgba(41, 151, 255, 0.2); } 100% { box-shadow: 0 0 35px rgba(41, 151, 255, 0.6); } }
         h1 { font-size: clamp(28px, 6vw, 36px); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 10px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
         p.bio { font-size: 1.05rem; color: var(--text-muted); font-weight: 400; line-height: 1.5; }
-
         .search-container { width: 100%; max-width: 600px; padding: 0 20px; margin-bottom: 35px; position: relative; }
         .search-input { width: 100%; padding: 16px 20px 16px 50px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); color: var(--text-main); font-size: 1.05rem; outline: none; transition: all 0.4s; }
         .search-input:focus { background: rgba(255,255,255,0.08); border-color: var(--accent); box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 0 3px rgba(41,151,255,0.2); transform: scale(1.02); }
@@ -61,7 +56,6 @@
         .video-container { width: 100%; max-width: 600px; padding: 0 20px; margin-bottom: 35px; display: none; }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 24px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: #111; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
         .container { width: 100%; max-width: 600px; padding: 0 20px 40px 20px; display: flex; flex-direction: column; gap: 15px; }
         .link-card { background: var(--card-bg); padding: 20px 25px; border-radius: 20px; text-decoration: none; color: var(--text-main); display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.06); transition: all 0.4s; cursor: pointer; position: relative; overflow: hidden; backdrop-filter: blur(15px); }
         .link-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent); transform: skewX(-25deg); transition: 0.6s ease-in-out; }
@@ -79,12 +73,10 @@
         .badge { margin-left: auto; font-size: 0.75rem; padding: 5px 12px; border-radius: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
         .badge-vip { background: linear-gradient(135deg, rgba(255, 159, 10, 0.2), rgba(255, 69, 58, 0.2)); color: var(--accent-special); border: 1px solid rgba(255, 159, 10, 0.3); }
         .badge-admin { background: linear-gradient(135deg, rgba(52, 199, 89, 0.2), rgba(0, 153, 51, 0.2)); color: #34c759; border: 1px solid rgba(52, 199, 89, 0.3); }
-
         .unlock-btn { position: fixed; bottom: 35px; right: 35px; background: rgba(20, 20, 22, 0.85); backdrop-filter: saturate(180%) blur(20px); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 55px; height: 55px; display: flex; justify-content: center; align-items: center; transition: all 0.4s; z-index: 100; cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.4); font-size: 1.3rem; }
         .unlock-btn:hover { background: rgba(40, 40, 45, 0.9); color: var(--text-main); transform: scale(1.1) translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
         .unlock-btn.active { color: var(--accent-special); border-color: rgba(255, 159, 10, 0.4); box-shadow: 0 0 20px rgba(255, 159, 10, 0.3); }
         .unlock-btn.admin-mode { color: #34c759; border-color: rgba(52, 199, 89, 0.4); box-shadow: 0 0 20px rgba(52, 199, 89, 0.3); }
-
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(15px); justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: rgba(20, 20, 22, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; padding: 35px; width: 100%; max-width: 420px; text-align: left; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.7); animation: modalZoom 0.4s; }
         @keyframes modalZoom { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
@@ -92,7 +84,6 @@
         .close-modal:hover { color: var(--text-main); transform: rotate(90deg); }
         .modal h2 { margin-top: 0; font-size: 1.5rem; margin-bottom: 15px; font-weight: 700; background: linear-gradient(90deg, #fff, #86868b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .modal p { color: var(--text-muted); line-height: 1.7; font-size: 1rem; white-space: pre-wrap; }
-
         .status-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
         .status-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-main); font-size: 0.95rem; }
         .status-item:last-child { border-bottom: none; }
@@ -100,13 +91,10 @@
         .status-badge.status-ok { background: rgba(52, 199, 89, 0.15); color: #34c759; border: 1px solid rgba(52,199,89,0.3); }
         .status-badge.status-error { background: rgba(255, 59, 48, 0.15); color: #ff3b30; border: 1px solid rgba(255,59,48,0.3); }
         .status-badge.status-checking { background: rgba(255, 204, 0, 0.15); color: #ffcc00; border: 1px solid rgba(255,204,0,0.3); }
-
         .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s; }
         .fade-in.visible { opacity: 1; transform: translateY(0); }
         .loader { border: 3px solid rgba(255,255,255,0.05); border-radius: 50%; border-top: 3px solid var(--accent); width: 40px; height: 40px; animation: spin 1s infinite; margin: 30px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* --- Admin Dashboard CSS --- */
         .admin-tab-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
         .admin-tab { background: none; border: none; color: var(--text-muted); font-size: 1rem; font-weight: 600; cursor: pointer; padding: 8px 15px; border-radius: 8px; transition: 0.3s; }
         .admin-tab.active { background: rgba(255,255,255,0.1); color: var(--text-main); }
@@ -119,7 +107,6 @@
         .admin-select { background: rgba(0,0,0,0.5); color: var(--text-main); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 6px 10px; font-size: 0.85rem; outline: none; }
         .admin-btn-save { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 7px 12px; font-size: 0.8rem; font-weight: bold; cursor: pointer; margin-left: 10px; transition: 0.3s; }
         .admin-btn-save:hover { background: #1a75ff; transform: scale(1.05); }
-
         @media (max-width: 500px) {
             .status-text { display: none; } .nav-logo span { display: none; }
             .unlock-btn { bottom: 25px; right: 25px; width: 50px; height: 50px; }
@@ -137,14 +124,12 @@
                 <div class="menu-link dropbtn" id="apps-dropbtn">Apps <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i></div>
                 <div class="dropdown-content" id="apps-dropdown-list"></div>
             </div>
-
             <div class="dropdown" id="admin-simulate-dropdown" style="display: none;">
                 <div class="menu-link dropbtn" id="simulate-dropbtn" style="color: #34c759; font-weight: bold;">
                     <i class="fas fa-eye" style="margin-right: 4px;"></i> <span id="view-as-text">View As: ADMIN</span> <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i>
                 </div>
                 <div class="dropdown-content" id="simulate-dropdown-list"></div>
             </div>
-
             <div class="menu-link" id="about-btn">About</div>
         </div>
         <div class="nav-right">
@@ -222,7 +207,7 @@
         </div>
     </div>
 
-    <!-- Ask Note Modal (new user registration) -->
+    <!-- Ask Note Modal -->
     <div id="ask-note-modal" class="modal">
         <div class="modal-content" style="text-align: center; padding-top: 40px;">
             <span class="close-modal" id="close-note-btn">&times;</span>
@@ -275,7 +260,8 @@
     // § 1 · CONSTANTS & MUTABLE STATE
     // ════════════════════════════════════════════════════════════════
 
-    const API_URL = "https://script.google.com/macros/s/AKfycbyNoUFK4qqqYQ4c11vVyugVKk5qzF6fQcdoL1cQL-PbSVIeE2FpO5-56YVHB9cZxjaS0w/exec";
+    const API_URL     = "https://script.google.com/macros/s/AKfycbyNoUFK4qqqYQ4c11vVyugVKk5qzF6fQcdoL1cQL-PbSVIeE2FpO5-56YVHB9cZxjaS0w/exec";
+    const SESSION_KEY = 'koomean_session_v2'; // localStorage key
 
     const state = {
         accessGroup   : 'public',
@@ -283,29 +269,24 @@
         allUsers      : [],
         aboutText     : '',
         isLoggedIn    : false,
-        currentUser   : null,    // { email, name, role, pic }
-        pendingPayload: null,    // Google JWT payload held while awaiting note input
+        currentUser   : null,
+        pendingPayload: null,
         sysStatus     : { api: 'checking', media: 'checking' },
     };
 
     // ════════════════════════════════════════════════════════════════
     // § 2 · CACHED DOM REFERENCES
-    //   All elements that are queried repeatedly are cached once here.
-    //   Dynamic lookups (e.g. modal-user-role-container) use getEl().
     // ════════════════════════════════════════════════════════════════
 
     const getEl = (id) => document.getElementById(id);
 
     const DOM = {
-        // Navbar
         navStatusDot  : getEl('nav-status-dot'),
         navStatusText : getEl('nav-status-text'),
         navClock      : getEl('nav-clock'),
         navProfileImg : getEl('nav-profile-img'),
-        // System-status modal badges
         badgeApi      : getEl('badge-api'),
         badgeMedia    : getEl('badge-media'),
-        // Main content
         linksContainer: getEl('links-container'),
         searchInput   : getEl('search-input'),
         mainProfileImg: getEl('main-profile-img'),
@@ -313,19 +294,16 @@
         profileBio    : getEl('profile-bio'),
         youtubeIframe : getEl('youtube-iframe'),
         featuredVideo : getEl('featured-video'),
-        // Navbar dropdowns
         appsDropdown  : getEl('apps-dropdown-list'),
         simulateMenu  : getEl('admin-simulate-dropdown'),
         simulateList  : getEl('simulate-dropdown-list'),
         viewAsText    : getEl('view-as-text'),
-        // Modals
         aboutModal    : getEl('about-modal'),
         statusModal   : getEl('status-modal'),
         loginModal    : getEl('login-modal'),
         userProfModal : getEl('user-profile-modal'),
         askNoteModal  : getEl('ask-note-modal'),
         adminDashModal: getEl('admin-dashboard-modal'),
-        // Misc content
         modalText     : getEl('modal-text'),
         newUserNote   : getEl('new-user-note'),
         unlockBtn     : getEl('unlockBtn'),
@@ -337,35 +315,14 @@
     // § 3 · SECURITY & UTILITY HELPERS
     // ════════════════════════════════════════════════════════════════
 
-    /**
-     * Escapes HTML special chars to neutralise XSS when building innerHTML strings.
-     * Prefer textContent/createElement; use this only where innerHTML is unavoidable.
-     */
-    function escapeHtml(str) {
-        if (str == null) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    /**
-     * Returns true only for http / https URLs.
-     * Blocks javascript:, data:, vbscript: and other dangerous protocols.
-     */
     function isSafeUrl(url) {
         if (!url) return false;
         try {
             const { protocol } = new URL(String(url));
             return protocol === 'http:' || protocol === 'https:';
-        } catch {
-            return false;
-        }
+        } catch { return false; }
     }
 
-    /** Returns a colour string for a FontAwesome icon class (brand colours). */
     function getIconColor(iconClass) {
         const l = (iconClass || '').toLowerCase();
         if (l.includes('facebook'))  return '#1877F2';
@@ -377,11 +334,6 @@
         return 'var(--accent)';
     }
 
-    /**
-     * Safely decodes the payload section of a Google JWT.
-     * NOTE: This does NOT verify the signature – signature validation must be
-     * performed server-side. Client-side decode is only for display purposes.
-     */
     function decodeJwt(token) {
         try {
             const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -390,15 +342,39 @@
                     atob(base64).split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
                 )
             );
-        } catch {
-            return null;
-        }
+        } catch { return null; }
     }
 
-    /** Returns a debounced version of `fn`, delaying execution by `ms` milliseconds. */
     function debounce(fn, ms) {
         let timer;
         return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // § 3b · SESSION PERSISTENCE  ← ส่วนที่เพิ่มใหม่
+    // ════════════════════════════════════════════════════════════════
+
+    /**
+     * บันทึก email, name, pic ลง localStorage
+     * เพื่อให้ restore session ได้เมื่อ refresh หน้า
+     */
+    function saveSession(email, name, pic) {
+        try {
+            localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name, pic }));
+        } catch (e) { console.warn('saveSession failed:', e); }
+    }
+
+    /** โหลด session ที่บันทึกไว้ หรือ return null ถ้าไม่มี */
+    function loadSession() {
+        try {
+            const raw = localStorage.getItem(SESSION_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    }
+
+    /** ล้าง session ออกจาก localStorage (เรียกตอน logout) */
+    function clearSession() {
+        try { localStorage.removeItem(SESSION_KEY); } catch (e) { /* ignore */ }
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -426,7 +402,6 @@
         const { api, media } = state.sysStatus;
         applyBadge(DOM.badgeApi,   api);
         applyBadge(DOM.badgeMedia, media);
-
         if (api === 'error' || media === 'error') {
             DOM.navStatusDot.className    = 'status-dot error';
             DOM.navStatusText.textContent = 'System Issue';
@@ -452,12 +427,12 @@
                 hour: '2-digit', minute: '2-digit', second: '2-digit',
             });
         };
-        tick(); // render immediately, then every second
+        tick();
         setInterval(tick, 1000);
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 6 · INTERSECTION OBSERVER  (fade-in animations)
+    // § 6 · INTERSECTION OBSERVER
     // ════════════════════════════════════════════════════════════════
 
     const fadeObserver = new IntersectionObserver((entries) => {
@@ -481,13 +456,10 @@
     function openStatus() { openModal(DOM.statusModal); }
     function openLogin()  { openModal(DOM.loginModal);  }
 
-    // Close modals when clicking the backdrop (outside .modal-content)
     window.addEventListener('click', (e) => {
-        // Dismiss dropdown menus when clicking elsewhere
         if (!e.target.closest('.dropdown')) {
             document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
         }
-        // Dismiss any modal whose backdrop was clicked
         [DOM.aboutModal, DOM.statusModal, DOM.loginModal,
          DOM.userProfModal, DOM.adminDashModal, DOM.askNoteModal]
             .forEach(m => { if (e.target === m) closeModal(m); });
@@ -503,7 +475,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 9 · SEARCH  (debounced – avoids filtering on every keystroke)
+    // § 9 · SEARCH
     // ════════════════════════════════════════════════════════════════
 
     DOM.searchInput.addEventListener('keyup', debounce(() => {
@@ -512,7 +484,7 @@
     }, 150));
 
     // ════════════════════════════════════════════════════════════════
-    // § 10 · SIMULATE ROLE  (admin "view-as" feature)
+    // § 10 · SIMULATE ROLE
     // ════════════════════════════════════════════════════════════════
 
     function extractUniqueRoles() {
@@ -533,11 +505,10 @@
         }
         DOM.simulateMenu.style.display = 'block';
         DOM.simulateList.innerHTML = '';
-
         extractUniqueRoles().forEach(role => {
             const a = document.createElement('a');
             a.href        = '#';
-            a.textContent = role.toUpperCase();           // safe: textContent
+            a.textContent = role.toUpperCase();
             a.addEventListener('click', (e) => {
                 e.preventDefault();
                 simulateRole(role);
@@ -547,7 +518,7 @@
     }
 
     function simulateRole(role) {
-        state.accessGroup         = role;
+        state.accessGroup          = role;
         DOM.viewAsText.textContent = `View As: ${role.toUpperCase()}`;
         renderLinks(state.allLinks);
         DOM.simulateList.classList.remove('show');
@@ -557,7 +528,6 @@
     // § 11 · AUTHENTICATION
     // ════════════════════════════════════════════════════════════════
 
-    /** Called by Google Identity Services after a successful sign-in. */
     function handleCredentialResponse(res) {
         const payload = decodeJwt(res.credential);
         if (!payload) { console.error('Could not decode JWT payload.'); return; }
@@ -567,7 +537,6 @@
         setSystemStatus('api', 'checking');
         DOM.linksContainer.innerHTML = '<div class="loader"></div><div style="text-align:center;color:var(--text-muted);font-size:.9rem;">Checking Account…</div>';
 
-        // Pass null for note – server will return requireRegistration if the email is new
         loadData(payload.email, payload.name, payload.picture, null);
     }
 
@@ -582,12 +551,10 @@
         if (!state.isLoggedIn || !state.currentUser) { openLogin(); return; }
 
         const { pic, name, email, role } = state.currentUser;
-
-        // Use textContent / .src – never innerHTML – for user-supplied values
-        getEl('modal-user-pic').src              = pic;
-        getEl('modal-user-name').textContent     = name;
-        getEl('modal-user-email').textContent    = email;
-        getEl('modal-user-role').textContent     = role;
+        getEl('modal-user-pic').src           = pic;
+        getEl('modal-user-name').textContent  = name;
+        getEl('modal-user-email').textContent = email;
+        getEl('modal-user-role').textContent  = role;
 
         const roleBox  = getEl('modal-user-role-container');
         const adminBtn = getEl('admin-panel-btn');
@@ -603,12 +570,12 @@
             roleBox.style.color      = 'var(--accent-special)';
             adminBtn.style.display   = 'none';
         }
-
         openModal(DOM.userProfModal);
     }
 
     function logout() {
         closeModal(DOM.userProfModal);
+        clearSession(); // ← ล้าง localStorage
         Object.assign(state, {
             isLoggedIn   : false,
             currentUser  : null,
@@ -644,18 +611,18 @@
             setSystemStatus('api',   'ok');
             setSystemStatus('media', 'ok');
 
-            // Server signals that this Google account has never signed in before
             if (data.requireRegistration) {
-                renderLinks(state.allLinks); // restore public links so the page isn't blank
+                renderLinks(state.allLinks);
                 openModal(DOM.askNoteModal);
                 return;
             }
 
-            // Authenticated session
             if (userEmail && data.user) {
                 state.isLoggedIn  = true;
                 state.accessGroup = data.user.role || 'public';
                 state.currentUser = { email: data.user.email, name: userName, role: data.user.role, pic: userPic };
+
+                saveSession(userEmail, userName, userPic); // ← บันทึก session
 
                 DOM.unlockBtn.classList.add('active');
                 DOM.unlockBtn.innerHTML = '<i class="fas fa-unlock"></i>';
@@ -663,15 +630,13 @@
                 DOM.viewAsText.textContent = `View As: ${state.accessGroup.toUpperCase()}`;
             }
 
-            // Profile section
             if (data.profile) {
-                DOM.profileName.textContent    = data.profile.name || 'My Portfolio';
-                DOM.profileBio.textContent     = data.profile.bio  || '';
-                DOM.mainProfileImg.src         = data.profile.imageUrl || 'https://ui-avatars.com/api/?name=M&background=random';
-                state.aboutText                = data.profile.aboutText || '';
+                DOM.profileName.textContent = data.profile.name || 'My Portfolio';
+                DOM.profileBio.textContent  = data.profile.bio  || '';
+                DOM.mainProfileImg.src      = data.profile.imageUrl || 'https://ui-avatars.com/api/?name=M&background=random';
+                state.aboutText             = data.profile.aboutText || '';
 
                 if (data.profile.videoUrl) {
-                    // Extract 11-char YouTube video ID from any standard YouTube URL format
                     const m = data.profile.videoUrl.match(/(?:youtu\.be\/|(?:v|embed|watch\?v)=|&v=)([A-Za-z0-9_-]{11})/);
                     if (m) {
                         DOM.youtubeIframe.src           = `https://www.youtube.com/embed/${m[1]}`;
@@ -680,28 +645,27 @@
                 }
             }
 
-            // Apps dropdown – built with createElement to prevent XSS in app names/URLs
             DOM.appsDropdown.innerHTML = '';
             if (data.apps?.length) {
                 data.apps.forEach(app => {
-                    if (!isSafeUrl(app.url)) return; // skip non-http(s) URLs
+                    if (!isSafeUrl(app.url)) return;
                     const a = document.createElement('a');
                     a.href        = app.url;
                     a.target      = '_blank';
                     a.rel         = 'noopener noreferrer';
-                    a.textContent = app.name;           // safe: textContent
+                    a.textContent = app.name;
                     DOM.appsDropdown.appendChild(a);
                 });
             } else {
                 const placeholder = document.createElement('a');
-                placeholder.href            = '#';
-                placeholder.style.cssText   = 'color:var(--text-muted);padding-left:20px;';
-                placeholder.textContent     = 'No Apps';
+                placeholder.href          = '#';
+                placeholder.style.cssText = 'color:var(--text-muted);padding-left:20px;';
+                placeholder.textContent   = 'No Apps';
                 DOM.appsDropdown.appendChild(placeholder);
             }
 
-            if (data.links)    state.allLinks  = data.links;
-            if (data.allUsers) state.allUsers  = data.allUsers;
+            if (data.links)    state.allLinks = data.links;
+            if (data.allUsers) state.allUsers = data.allUsers;
 
             buildSimulateMenu();
             renderLinks(state.allLinks);
@@ -754,63 +718,57 @@
             publicLinks.forEach(l => renderLinkCard(l, false));
         }
 
-        // Register newly added cards with the fade observer
         DOM.linksContainer.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
         updateNavbarImage();
     }
 
     function addGroupDivider(text, extraStyle = '') {
         const div = document.createElement('div');
-        div.className    = 'group-divider fade-in';
+        div.className     = 'group-divider fade-in';
         div.style.cssText = extraStyle;
-        div.textContent  = text;                          // safe: textContent
+        div.textContent   = text;
         DOM.linksContainer.appendChild(div);
     }
 
-    /** Builds a link card entirely via DOM API – no innerHTML with server data. */
     function renderLinkCard(link, isSpecial) {
-        if (!isSafeUrl(link.url)) return; // silently skip unsafe URLs
+        if (!isSafeUrl(link.url)) return;
 
-        const card    = document.createElement('a');
-        card.href     = link.url;
-        card.target   = '_blank';
-        card.rel      = 'noopener noreferrer';
+        const card     = document.createElement('a');
+        card.href      = link.url;
+        card.target    = '_blank';
+        card.rel       = 'noopener noreferrer';
         card.className = 'link-card fade-in' +
             (isSpecial ? (state.accessGroup === 'admin' ? ' admin-access' : ' special-access') : '');
 
-        // Icon element – className assignment is safe (no script execution)
-        const iconWrap = document.createElement('div');
+        const iconWrap     = document.createElement('div');
         iconWrap.className = 'link-icon';
-        const icon = document.createElement('i');
-        icon.className   = link.icon || 'fas fa-link';
-        icon.style.color = getIconColor(link.icon);
+        const icon         = document.createElement('i');
+        icon.className     = link.icon || 'fas fa-link';
+        icon.style.color   = getIconColor(link.icon);
         iconWrap.appendChild(icon);
 
-        // Title
-        const titleEl = document.createElement('div');
+        const titleEl       = document.createElement('div');
         titleEl.className   = 'link-text';
-        titleEl.textContent = link.title;                 // safe: textContent
+        titleEl.textContent = link.title;
 
         card.appendChild(iconWrap);
         card.appendChild(titleEl);
 
-        // Access badge
         if (isSpecial) {
-            const badge = document.createElement('span');
+            const badge     = document.createElement('span');
             const badgeIcon = document.createElement('i');
-
             if (state.accessGroup === 'admin') {
-                badge.className      = 'badge badge-admin';
-                badgeIcon.className  = 'fas fa-shield-alt';
+                badge.className             = 'badge badge-admin';
+                badgeIcon.className         = 'fas fa-shield-alt';
                 badgeIcon.style.marginRight = '6px';
                 badge.appendChild(badgeIcon);
                 badge.appendChild(document.createTextNode('ADMIN'));
             } else {
-                badge.className      = 'badge badge-vip';
-                badgeIcon.className  = 'fas fa-check-circle';
+                badge.className             = 'badge badge-vip';
+                badgeIcon.className         = 'fas fa-check-circle';
                 badgeIcon.style.marginRight = '6px';
                 badge.appendChild(badgeIcon);
-                badge.appendChild(document.createTextNode(state.accessGroup)); // safe
+                badge.appendChild(document.createTextNode(state.accessGroup));
             }
             card.appendChild(badge);
         }
@@ -821,7 +779,7 @@
     function updateNavbarImage() {
         const img = DOM.navProfileImg;
         if (state.isLoggedIn && state.currentUser?.pic) {
-            img.src = state.currentUser.pic;
+            img.src                = state.currentUser.pic;
             const isAdmin          = state.accessGroup === 'admin';
             img.style.borderColor  = isAdmin ? '#34c759' : 'var(--accent-special)';
             img.style.boxShadow    = isAdmin
@@ -852,36 +810,31 @@
         });
     }
 
-    /** Renders the Links tab – groups are editable via a plain text input. */
     function renderAdminLinks() {
         DOM.adminTabLinks.innerHTML = '';
-
         state.allLinks.forEach(link => {
-            const item = document.createElement('div');
+            const item     = document.createElement('div');
             item.className = 'admin-item';
 
-            // Info column
-            const info     = document.createElement('div');
+            const info       = document.createElement('div');
             info.style.width = '60%';
 
-            const titleEl = document.createElement('div');
+            const titleEl       = document.createElement('div');
             titleEl.className   = 'admin-item-title';
-            titleEl.textContent = link.title;             // safe: textContent
+            titleEl.textContent = link.title;
 
-            const subEl = document.createElement('div');
+            const subEl     = document.createElement('div');
             subEl.className = 'admin-item-subtitle';
-            const linkIcon = document.createElement('i');
+            const linkIcon  = document.createElement('i');
             linkIcon.className = 'fas fa-link';
             const urlPreview = document.createTextNode(
                 ' ' + (isSafeUrl(link.url) ? link.url.substring(0, 25) + '…' : '(invalid url)')
             );
             subEl.appendChild(linkIcon);
             subEl.appendChild(urlPreview);
-
             info.append(titleEl, subEl);
 
-            // Controls column
-            const controls = document.createElement('div');
+            const controls         = document.createElement('div');
             controls.style.cssText = 'display:flex;align-items:center;';
 
             const input       = document.createElement('input');
@@ -889,7 +842,7 @@
             input.className   = 'admin-select';
             input.style.width = '80px';
             input.placeholder = 'group';
-            input.value       = link.group || 'public';  // safe: .value
+            input.value       = link.group || 'public';
 
             const saveBtn       = document.createElement('button');
             saveBtn.className   = 'admin-btn-save';
@@ -904,7 +857,6 @@
         });
     }
 
-    /** Renders the Users tab – role is a <select> with optional custom-role input. */
     function renderAdminUsers() {
         DOM.adminTabUsers.innerHTML = '';
 
@@ -919,36 +871,33 @@
             const item     = document.createElement('div');
             item.className = 'admin-item';
 
-            // Info column
-            const info = document.createElement('div');
+            const info       = document.createElement('div');
             info.style.width = '60%';
 
-            const nameEl = document.createElement('div');
+            const nameEl       = document.createElement('div');
             nameEl.className   = 'admin-item-title';
-            nameEl.textContent = user.name;               // safe: textContent
+            nameEl.textContent = user.name;
 
-            const subEl = document.createElement('div');
+            const subEl     = document.createElement('div');
             subEl.className = 'admin-item-subtitle';
 
             const emailText = document.createTextNode(user.email);
             const br        = document.createElement('br');
             const noteSpan  = document.createElement('span');
             noteSpan.style.cssText = 'color:var(--accent-special);font-style:italic;font-size:.75rem;';
-            noteSpan.textContent   = `📝 Note: ${user.note || '-'}`; // safe: textContent
-
+            noteSpan.textContent   = `📝 Note: ${user.note || '-'}`;
             subEl.append(emailText, br, noteSpan);
             info.append(nameEl, subEl);
 
-            // Controls column
-            const controls = document.createElement('div');
+            const controls         = document.createElement('div');
             controls.style.cssText = 'display:flex;align-items:center;';
 
-            const select = document.createElement('select');
+            const select     = document.createElement('select');
             select.className = 'admin-select';
             roles.forEach(r => {
                 const opt        = document.createElement('option');
                 opt.value        = r;
-                opt.textContent  = r.toUpperCase();       // safe: textContent
+                opt.textContent  = r.toUpperCase();
                 opt.selected     = user.role === r;
                 select.appendChild(opt);
             });
@@ -957,10 +906,10 @@
             customOpt.textContent = '-- Custom Role --';
             select.appendChild(customOpt);
 
-            const customInput       = document.createElement('input');
-            customInput.type        = 'text';
-            customInput.className   = 'admin-select';
-            customInput.placeholder = 'New Role';
+            const customInput         = document.createElement('input');
+            customInput.type          = 'text';
+            customInput.className     = 'admin-select';
+            customInput.placeholder   = 'New Role';
             customInput.style.cssText = 'display:none;width:80px;margin-left:5px;';
 
             select.addEventListener('change', () => {
@@ -985,17 +934,10 @@
         });
     }
 
-    /**
-     * Sends an admin update request to the API.
-     * @param {string} action  - 'updateLink' | 'updateRole'
-     * @param {string} param1  - Link title or user email
-     * @param {string} param2  - New group value or new role value
-     * @param {HTMLElement} saveBtn - The button that triggered the call (for feedback)
-     */
     async function updateAdminData(action, param1, param2, saveBtn) {
-        const original       = saveBtn.textContent;
-        saveBtn.textContent  = '…';
-        saveBtn.disabled     = true;
+        const original      = saveBtn.textContent;
+        saveBtn.textContent = '…';
+        saveBtn.disabled    = true;
 
         try {
             const url = `${API_URL}` +
@@ -1014,7 +956,6 @@
                 saveBtn.textContent      = original;
                 saveBtn.style.background = 'var(--accent)';
                 saveBtn.disabled         = false;
-                // Refresh data so both tabs reflect the change
                 loadData(state.currentUser.email, state.currentUser.name, state.currentUser.pic);
             }, 1500);
 
@@ -1032,22 +973,17 @@
 
     // ════════════════════════════════════════════════════════════════
     // § 15 · EVENT LISTENER WIRING
-    //   All interactive elements use addEventListener (no inline handlers).
     // ════════════════════════════════════════════════════════════════
 
-    // Navbar
     getEl('apps-dropbtn').addEventListener('click', () =>
         toggleDropdown('apps-dropdown-list', ['simulate-dropdown-list']));
-
     getEl('simulate-dropbtn').addEventListener('click', () =>
         toggleDropdown('simulate-dropdown-list', ['apps-dropdown-list']));
-
     getEl('about-btn').addEventListener('click', openAbout);
     getEl('status-btn').addEventListener('click', openStatus);
     getEl('profile-btn').addEventListener('click', handleProfileClick);
     DOM.unlockBtn.addEventListener('click', handleProfileClick);
 
-    // Modal close buttons
     getEl('close-about-btn').addEventListener('click',   () => closeModal(DOM.aboutModal));
     getEl('close-status-btn').addEventListener('click',  () => closeModal(DOM.statusModal));
     getEl('close-login-btn').addEventListener('click',   () => closeModal(DOM.loginModal));
@@ -1055,28 +991,35 @@
     getEl('close-note-btn').addEventListener('click',    () => closeModal(DOM.askNoteModal));
     getEl('close-admin-btn').addEventListener('click',   () => closeModal(DOM.adminDashModal));
 
-    // Profile modal actions
     getEl('open-admin-btn').addEventListener('click', openAdminDashboard);
     getEl('logout-btn').addEventListener('click', logout);
 
-    // New user note form
     getEl('submit-note-btn').addEventListener('click', submitNewRegistration);
     getEl('new-user-note').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') submitNewRegistration();
     });
 
-    // Admin dashboard tabs
     document.querySelectorAll('.admin-tab[data-tab]').forEach(btn => {
         btn.addEventListener('click', () => switchAdminTab(btn.dataset.tab));
     });
 
     // ════════════════════════════════════════════════════════════════
-    // § 16 · INITIALISATION
+    // § 16 · INITIALISATION  ← แก้ไข: auto-restore session
     // ════════════════════════════════════════════════════════════════
 
     renderOverallStatus();
     startClock();
-    loadData();
+
+    // ตรวจสอบ session ที่บันทึกไว้ใน localStorage
+    // ถ้ามีให้ restore อัตโนมัติ ไม่ต้อง login ใหม่
+    const savedSession = loadSession();
+    if (savedSession?.email) {
+        DOM.linksContainer.innerHTML =
+            '<div class="loader"></div><div style="text-align:center;color:var(--text-muted);font-size:.9rem;">Restoring Session…</div>';
+        loadData(savedSession.email, savedSession.name, savedSession.pic);
+    } else {
+        loadData();
+    }
 
     </script>
 </body>
