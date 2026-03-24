@@ -164,7 +164,6 @@
         <div style="text-align: center; color: var(--text-muted); margin-top: 10px; font-size: 0.9rem;">LOADING DATA...</div>
     </div>
 
-    <!-- About Modal -->
     <div id="about-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" id="close-about-btn">&times;</span>
@@ -173,7 +172,6 @@
         </div>
     </div>
 
-    <!-- Status Modal -->
     <div id="status-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" id="close-status-btn">&times;</span>
@@ -186,7 +184,6 @@
         </div>
     </div>
 
-    <!-- User Profile Modal -->
     <div id="user-profile-modal" class="modal">
         <div class="modal-content" style="text-align: center; padding: 40px 30px;">
             <span class="close-modal" id="close-profile-btn">&times;</span>
@@ -207,7 +204,6 @@
         </div>
     </div>
 
-    <!-- Ask Note Modal -->
     <div id="ask-note-modal" class="modal">
         <div class="modal-content" style="text-align: center; padding-top: 40px;">
             <span class="close-modal" id="close-note-btn">&times;</span>
@@ -220,7 +216,6 @@
         </div>
     </div>
 
-    <!-- Admin Dashboard Modal -->
     <div id="admin-dashboard-modal" class="modal">
         <div class="modal-content" style="max-width: 550px;">
             <span class="close-modal" id="close-admin-btn">&times;</span>
@@ -234,7 +229,6 @@
         </div>
     </div>
 
-    <!-- Login Modal -->
     <div id="login-modal" class="modal">
         <div class="modal-content" style="text-align: center; padding-top: 45px;">
             <span class="close-modal" id="close-login-btn">&times;</span>
@@ -351,28 +345,19 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 3b · SESSION PERSISTENCE  ← ส่วนที่เพิ่มใหม่
+    // § 3b · SESSION PERSISTENCE
     // ════════════════════════════════════════════════════════════════
 
-    /**
-     * บันทึก email, name, pic ลง localStorage
-     * เพื่อให้ restore session ได้เมื่อ refresh หน้า
-     */
     function saveSession(email, name, pic) {
-        try {
-            localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name, pic }));
-        } catch (e) { console.warn('saveSession failed:', e); }
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name, pic })); }
+        catch (e) { console.warn('saveSession failed:', e); }
     }
 
-    /** โหลด session ที่บันทึกไว้ หรือ return null ถ้าไม่มี */
     function loadSession() {
-        try {
-            const raw = localStorage.getItem(SESSION_KEY);
-            return raw ? JSON.parse(raw) : null;
-        } catch { return null; }
+        try { const raw = localStorage.getItem(SESSION_KEY); return raw ? JSON.parse(raw) : null; }
+        catch { return null; }
     }
 
-    /** ล้าง session ออกจาก localStorage (เรียกตอน logout) */
     function clearSession() {
         try { localStorage.removeItem(SESSION_KEY); } catch (e) { /* ignore */ }
     }
@@ -551,7 +536,7 @@
         if (!state.isLoggedIn || !state.currentUser) { openLogin(); return; }
 
         const { pic, name, email, role } = state.currentUser;
-        getEl('modal-user-pic').src           = pic;
+        getEl('modal-user-pic').src            = pic;
         getEl('modal-user-name').textContent  = name;
         getEl('modal-user-email').textContent = email;
         getEl('modal-user-role').textContent  = role;
@@ -575,7 +560,7 @@
 
     function logout() {
         closeModal(DOM.userProfModal);
-        clearSession(); // ← ล้าง localStorage
+        clearSession();
         Object.assign(state, {
             isLoggedIn   : false,
             currentUser  : null,
@@ -622,7 +607,7 @@
                 state.accessGroup = data.user.role || 'public';
                 state.currentUser = { email: data.user.email, name: userName, role: data.user.role, pic: userPic };
 
-                saveSession(userEmail, userName, userPic); // ← บันทึก session
+                saveSession(userEmail, userName, userPic);
 
                 DOM.unlockBtn.classList.add('active');
                 DOM.unlockBtn.innerHTML = '<i class="fas fa-unlock"></i>';
@@ -683,7 +668,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 13 · RENDERING LINKS
+    // § 13 · RENDERING LINKS (UPDATED FOR MULTIPLE ROLES & STARRED)
     // ════════════════════════════════════════════════════════════════
 
     function renderLinks(linksData) {
@@ -696,9 +681,13 @@
 
         const visible = linksData.filter(link => {
             if (state.accessGroup === 'admin') return true;
+            // ดึง group มาเป็น Array เพื่อรองรับการตั้งหลาย Role ใน 1 ลิงก์ (เช่น "vip, student")
             const groups = (link.group || 'public').toLowerCase().split(',').map(g => g.trim());
             return groups.includes('public') || groups.includes(state.accessGroup);
         });
+
+        // เรียงลำดับให้ลิงก์ที่ถูกติดดาว (Starred) ขึ้นก่อน
+        visible.sort((a, b) => (b.starred === true ? 1 : 0) - (a.starred === true ? 1 : 0));
 
         const specialLinks = visible.filter(l =>
             !(l.group || 'public').toLowerCase().split(',').map(g => g.trim()).includes('public'));
@@ -751,6 +740,17 @@
         titleEl.className   = 'link-text';
         titleEl.textContent = link.title;
 
+        // ถ้ามีการติดดาว ให้เติมไอคอนดาวต่อท้ายชื่อ และใส่สีเรืองแสง
+        if (link.starred) {
+            const starIcon = document.createElement('i');
+            starIcon.className = 'fas fa-star';
+            starIcon.style.cssText = 'color: #ffcc00; margin-left: 8px; font-size: 0.85rem; filter: drop-shadow(0 0 5px rgba(255,204,0,0.5));';
+            titleEl.appendChild(starIcon);
+
+            card.style.borderColor = 'rgba(255, 204, 0, 0.3)';
+            card.style.boxShadow = '0 5px 15px rgba(255, 204, 0, 0.05)';
+        }
+
         card.appendChild(iconWrap);
         card.appendChild(titleEl);
 
@@ -793,7 +793,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 14 · ADMIN DASHBOARD
+    // § 14 · ADMIN DASHBOARD (UPDATED FOR STAR TOGGLE)
     // ════════════════════════════════════════════════════════════════
 
     function openAdminDashboard() {
@@ -817,7 +817,7 @@
             item.className = 'admin-item';
 
             const info       = document.createElement('div');
-            info.style.width = '60%';
+            info.style.width = '45%';
 
             const titleEl       = document.createElement('div');
             titleEl.className   = 'admin-item-title';
@@ -825,33 +825,42 @@
 
             const subEl     = document.createElement('div');
             subEl.className = 'admin-item-subtitle';
-            const linkIcon  = document.createElement('i');
-            linkIcon.className = 'fas fa-link';
-            const urlPreview = document.createTextNode(
-                ' ' + (isSafeUrl(link.url) ? link.url.substring(0, 25) + '…' : '(invalid url)')
-            );
-            subEl.appendChild(linkIcon);
-            subEl.appendChild(urlPreview);
+            subEl.innerHTML = `<i class="fas fa-link"></i> ${isSafeUrl(link.url) ? link.url.substring(0, 20) + '…' : '(invalid)'}`;
+            
             info.append(titleEl, subEl);
 
             const controls         = document.createElement('div');
-            controls.style.cssText = 'display:flex;align-items:center;';
+            controls.style.cssText = 'display:flex;align-items:center; gap: 8px;';
+
+            // ปุ่มติดดาว (Toggle Star)
+            let isStarred = link.starred;
+            const starBtn = document.createElement('button');
+            starBtn.style.cssText = `background:none; border:none; cursor:pointer; font-size:1.2rem; transition:0.3s; color:${isStarred ? '#ffcc00' : 'rgba(255,255,255,0.2)'};`;
+            starBtn.innerHTML = isStarred ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+            starBtn.title = "กดเพื่อติดดาว / เอาดาวออก";
+            starBtn.addEventListener('click', () => {
+                isStarred = !isStarred;
+                starBtn.innerHTML = isStarred ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                starBtn.style.color = isStarred ? '#ffcc00' : 'rgba(255,255,255,0.2)';
+            });
 
             const input       = document.createElement('input');
             input.type        = 'text';
             input.className   = 'admin-select';
-            input.style.width = '80px';
-            input.placeholder = 'group';
+            input.style.width = '100px';
+            input.placeholder = 'e.g. vip, student';
             input.value       = link.group || 'public';
+            input.title       = 'ใช้ลูกน้ำ (,) คั่นเพื่อใส่หลาย Role เช่น vip,student';
 
             const saveBtn       = document.createElement('button');
             saveBtn.className   = 'admin-btn-save';
             saveBtn.textContent = 'Save';
             saveBtn.addEventListener('click', () => {
-                updateAdminData('updateLink', link.title, input.value, saveBtn);
+                // ส่งค่า action, parameter 1, parameter 2, isStarred (param3), ตามด้วยปุ่ม saveBtn
+                updateAdminData('updateLink', link.title, input.value, isStarred, saveBtn);
             });
 
-            controls.append(input, saveBtn);
+            controls.append(starBtn, input, saveBtn);
             item.append(info, controls);
             DOM.adminTabLinks.appendChild(item);
         });
@@ -925,7 +934,9 @@
                     ? customInput.value.trim()
                     : select.value;
                 if (!role) { alert('กรุณาพิมพ์ชื่อ Role ใหม่ด้วยครับ'); return; }
-                updateAdminData('updateRole', user.email, role, saveBtn);
+                
+                // สำหรับ User ส่งแค่ action, p1, p2, ตัวแปรเปล่า(false), และปุ่ม saveBtn
+                updateAdminData('updateRole', user.email, role, false, saveBtn);
             });
 
             controls.append(select, customInput, saveBtn);
@@ -934,17 +945,30 @@
         });
     }
 
-    async function updateAdminData(action, param1, param2, saveBtn) {
+    async function updateAdminData(action, param1, param2, p3, p4) {
+        let saveBtn, isStarred = false;
+        if (action === 'updateLink') {
+            isStarred = p3;
+            saveBtn = p4;
+        } else {
+            saveBtn = p4 || p3; // รองรับกรณี p3 เป็น button
+        }
+
         const original      = saveBtn.textContent;
         saveBtn.textContent = '…';
         saveBtn.disabled    = true;
 
         try {
-            const url = `${API_URL}` +
+            let url = `${API_URL}` +
                 `?email=${encodeURIComponent(state.currentUser.email)}` +
                 `&action=${encodeURIComponent(action)}` +
                 `&p1=${encodeURIComponent(param1)}` +
                 `&p2=${encodeURIComponent(param2)}`;
+            
+            // แนบค่าดาวไปให้ Google Apps Script หากเป็น updateLink
+            if (action === 'updateLink') {
+                url += `&p3=${isStarred}`;
+            }
 
             const res    = await fetch(url);
             const result = await res.json();
@@ -1004,14 +1028,12 @@
     });
 
     // ════════════════════════════════════════════════════════════════
-    // § 16 · INITIALISATION  ← แก้ไข: auto-restore session
+    // § 16 · INITIALISATION
     // ════════════════════════════════════════════════════════════════
 
     renderOverallStatus();
     startClock();
 
-    // ตรวจสอบ session ที่บันทึกไว้ใน localStorage
-    // ถ้ามีให้ restore อัตโนมัติ ไม่ต้อง login ใหม่
     const savedSession = loadSession();
     if (savedSession?.email) {
         DOM.linksContainer.innerHTML =
