@@ -113,6 +113,14 @@
         .admin-btn-save:hover { background: #1a75ff; transform: scale(1.05); }
         .star-btn { background: none; border: none; cursor: pointer; font-size: 1.2rem; transition: transform 0.2s, color 0.2s; padding: 4px; line-height: 1; }
         .star-btn:hover { transform: scale(1.3); }
+        /* ปุ่มดาวบน card หน้าหลัก (เฉพาะ admin) */
+        .card-star-btn { background: none; border: none; cursor: pointer; padding: 6px 4px 6px 10px; color: rgba(255,255,255,0.2); font-size: 1rem; line-height: 1; transition: color 0.2s, transform 0.2s; flex-shrink: 0; margin-left: auto; }
+        .card-star-btn:hover { transform: scale(1.3); }
+        .card-star-btn.starred { color: #ffcc00; filter: drop-shadow(0 0 5px rgba(255,204,0,.5)); }
+        .card-star-btn.saving { opacity: 0.5; pointer-events: none; animation: blink 0.6s infinite; }
+        /* toast แจ้งผล */
+        #star-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: rgba(20,20,22,0.95); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); padding: 10px 22px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; z-index: 9999; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+        #star-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         @media (max-width: 500px) {
             .status-text { display: none; } .nav-logo span { display: none; }
             .unlock-btn { bottom: 25px; right: 25px; width: 50px; height: 50px; }
@@ -254,6 +262,7 @@
     </div>
 
     <button class="unlock-btn" id="unlockBtn"><i class="fas fa-lock"></i></button>
+    <div id="star-toast"></div>
 
     <script>
     // ════════════════════════════════════════════════════════════════
@@ -704,9 +713,71 @@
         return div;
     }
 
+    // ════════════════════════════════════════════════════════════════
+    // § 13b · INLINE STAR TOGGLE (ADMIN ONLY)
+    // ════════════════════════════════════════════════════════════════
+
+    let _toastTimer = null;
+    function showToast(msg, color = '#34c759') {
+        const el = getEl('star-toast');
+        el.textContent  = msg;
+        el.style.color  = color;
+        el.style.borderColor = color + '44';
+        el.classList.add('show');
+        clearTimeout(_toastTimer);
+        _toastTimer = setTimeout(() => el.classList.remove('show'), 2000);
+    }
+
+    /**
+     * Toggle star ใน state.allLinks ทันที แล้วบันทึกไป GAS
+     * ถ้า GAS fail → revert state และแจ้ง error
+     */
+    async function toggleStarInline(linkTitle, btnEl) {
+        // หา link ใน state
+        const idx = state.allLinks.findIndex(l => l.title === linkTitle);
+        if (idx === -1) return;
+
+        const link        = state.allLinks[idx];
+        const newStarred  = !link.starred;
+
+        // 1. Optimistic update — อัปเดต state ทันที แล้ว re-render
+        state.allLinks[idx] = { ...link, starred: newStarred };
+        btnEl.classList.toggle('starred', newStarred);
+        btnEl.innerHTML = `<i class="${newStarred ? 'fas' : 'far'} fa-star"></i>`;
+        btnEl.classList.add('saving');
+
+        // re-render ทันทีเพื่อย้าย card ขึ้น/ลง pinned section
+        renderLinks(state.allLinks);
+
+        // 2. บันทึกไป GAS
+        try {
+            const url = `${API_URL}`
+                + `?email=${encodeURIComponent(state.currentUser.email)}`
+                + `&action=updateLink`
+                + `&p1=${encodeURIComponent(link.title)}`
+                + `&p2=${encodeURIComponent(link.group || 'public')}`
+                + `&p3=${newStarred ? 'true' : 'false'}`;
+
+            const res    = await fetch(url);
+            const result = await res.json();
+
+            if (!result.success) throw new Error(result.message || 'Save failed');
+
+            showToast(newStarred ? '⭐ Pinned!' : '★ Unpinned');
+        } catch (err) {
+            // 3. Revert on error
+            state.allLinks[idx] = { ...link, starred: !newStarred };
+            renderLinks(state.allLinks);
+            showToast('❌ บันทึกไม่สำเร็จ', '#ff3b30');
+            console.error('toggleStarInline error:', err);
+        }
+    }
+
     /** สร้าง link card element (ยังไม่ append) — คืน null ถ้า URL ไม่ปลอดภัย */
     function createLinkCard(link, isSpecial) {
         if (!isSafeUrl(link.url)) return null;
+
+        const isAdmin = state.currentUser?.role === 'admin';
 
         const card     = document.createElement('a');
         card.href      = link.url;
@@ -715,8 +786,8 @@
 
         // รวม class ทั้งหมด
         let cardClass = 'link-card fade-in';
-        if (link.starred)  cardClass += ' starred-card';
-        if (isSpecial) cardClass += (state.accessGroup === 'admin') ? ' admin-access' : ' special-access';
+        if (link.starred) cardClass += ' starred-card';
+        if (isSpecial)    cardClass += (state.accessGroup === 'admin') ? ' admin-access' : ' special-access';
         card.className = cardClass;
 
         // Icon
@@ -727,22 +798,15 @@
         icon.style.color   = getIconColor(link.icon);
         iconWrap.appendChild(icon);
 
-        // Title + optional star icon
+        // Title (ไม่ใส่ star icon ใน title แล้ว — ย้ายไปปุ่มด้านขวาแทน)
         const titleEl       = document.createElement('div');
         titleEl.className   = 'link-text';
         titleEl.textContent = link.title;
 
-        if (link.starred) {
-            const starIcon         = document.createElement('i');
-            starIcon.className     = 'fas fa-star';
-            starIcon.style.cssText = 'color:#ffcc00;margin-left:8px;font-size:.85rem;filter:drop-shadow(0 0 5px rgba(255,204,0,.5));';
-            titleEl.appendChild(starIcon);
-        }
-
         card.appendChild(iconWrap);
         card.appendChild(titleEl);
 
-        // Badge สำหรับลิงก์พิเศษ
+        // Badge สำหรับลิงก์พิเศษ (admin view)
         if (isSpecial) {
             const badge     = document.createElement('span');
             const badgeIcon = document.createElement('i');
@@ -760,6 +824,29 @@
                 badge.appendChild(document.createTextNode(state.accessGroup.toUpperCase()));
             }
             card.appendChild(badge);
+        }
+
+        // ── ปุ่มดาว ───────────────────────────────────────────────
+        // Admin: กดได้ บันทึกทันที
+        // Non-admin + starred: แสดง icon อย่างเดียว
+        if (isAdmin) {
+            const starBtn       = document.createElement('button');
+            starBtn.className   = 'card-star-btn' + (link.starred ? ' starred' : '');
+            starBtn.title       = link.starred ? 'เอาออกจาก Pinned' : 'ปักหมุด (Pin)';
+            starBtn.innerHTML   = `<i class="${link.starred ? 'fas' : 'far'} fa-star"></i>`;
+            // หยุด event ไม่ให้เปิด link
+            starBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleStarInline(link.title, starBtn);
+            });
+            card.appendChild(starBtn);
+        } else if (link.starred) {
+            // แสดง icon สีทองสำหรับ user ทั่วไป (display only)
+            const starIcon         = document.createElement('i');
+            starIcon.className     = 'fas fa-star';
+            starIcon.style.cssText = 'color:#ffcc00;margin-left:auto;padding-left:10px;font-size:.9rem;filter:drop-shadow(0 0 5px rgba(255,204,0,.5));flex-shrink:0;';
+            card.appendChild(starIcon);
         }
 
         return card;
@@ -900,22 +987,19 @@
             const controls         = document.createElement('div');
             controls.style.cssText = 'display:flex;align-items:center;gap:8px;';
 
-            // ★ Star toggle button — ติดตาม state ด้วย data attribute
-            let isStarred = link.starred === true;
-
-            const starBtn         = document.createElement('button');
-            starBtn.className     = 'star-btn';
-            starBtn.title         = 'ติดดาว / เอาดาวออก';
-            starBtn.style.color   = isStarred ? '#ffcc00' : 'rgba(255,255,255,0.25)';
-            starBtn.innerHTML     = `<i class="${isStarred ? 'fas' : 'far'} fa-star"></i>`;
-
+            // ★ ปุ่มดาว — บันทึกทันทีเมื่อกด (ไม่ต้องรอ Save)
+            const starBtn       = document.createElement('button');
+            starBtn.className   = 'star-btn';
+            starBtn.title       = 'กดเพื่อ Pin / Unpin (บันทึกทันที)';
+            starBtn.style.color = link.starred ? '#ffcc00' : 'rgba(255,255,255,0.25)';
+            starBtn.innerHTML   = `<i class="${link.starred ? 'fas' : 'far'} fa-star"></i>`;
             starBtn.addEventListener('click', () => {
-                isStarred             = !isStarred;
-                starBtn.style.color   = isStarred ? '#ffcc00' : 'rgba(255,255,255,0.25)';
-                starBtn.innerHTML     = `<i class="${isStarred ? 'fas' : 'far'} fa-star"></i>`;
+                toggleStarInline(link.title, starBtn);
+                // sync หน้า admin dashboard ให้ตรง
+                setTimeout(() => renderAdminLinks(), 300);
             });
 
-            // Group input
+            // Group input — เปลี่ยน group ต้องกด Save แยก
             const input       = document.createElement('input');
             input.type        = 'text';
             input.className   = 'admin-select';
@@ -924,14 +1008,14 @@
             input.value       = link.group || 'public';
             input.title       = 'ใช้ลูกน้ำ (,) คั่นเพื่อใส่หลาย Role เช่น vip,student';
 
-            // Save button — ใช้ closure เพื่อ capture isStarred ณ ตอนกดปุ่ม
+            // Save — บันทึกเฉพาะ group (star ถูกบันทึกแยกแล้ว)
             const saveBtn       = document.createElement('button');
             saveBtn.className   = 'admin-btn-save';
             saveBtn.textContent = 'Save';
             saveBtn.addEventListener('click', () => {
-                // ส่ง isStarred ตามสถานะปัจจุบัน (closure capture by reference ไม่ได้ใน primitive)
-                // จึงใช้ flag จาก starBtn.innerHTML แทน
-                const currentStar = starBtn.querySelector('i').classList.contains('fas');
+                // อ่าน starred ล่าสุดจาก state (ไม่ใช้จาก DOM)
+                const currentLink   = state.allLinks.find(l => l.title === link.title);
+                const currentStar   = currentLink ? currentLink.starred === true : false;
                 updateAdminData('updateLink', link.title, input.value, currentStar, saveBtn);
             });
 
