@@ -401,7 +401,7 @@
         allUsers      : [],
         aboutText     : '',
         isLoggedIn    : false,
-        idToken       : null,         // <--- New: เก็บ JWT Token สำหรับ Backend v3.0
+        idToken       : null,
         currentUser   : null,         
         pendingPayload: null,
         sysStatus     : { api: 'checking', media: 'checking' },
@@ -534,10 +534,9 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 5 · FETCH HELPERS (สำหรับ POST ไปยัง Backend v3.0)
+    // § 5 · FETCH HELPERS
     // ════════════════════════════════════════════════════════════════
 
-    // Helper ใหม่สำหรับส่งแบบ POST พร้อมแนบ Token สำหรับ Admin Actions (Write)
     async function postData(action, params = {}) {
         if (!state.idToken) throw new Error("Authentication required");
         
@@ -814,11 +813,11 @@
 
         closeModal(DOM.loginModal);
         state.pendingPayload = payload;
-        state.idToken = res.credential; // เก็บ JWT ไว้ใช้เรียก API V3.0
+        state.idToken = res.credential; 
         setSystemStatus('api', 'checking');
-        renderSkeleton('Checking Account…');
-
-        loadData(payload.email, payload.name, payload.picture, null);
+        
+        renderSkeleton('Verifying with Google…');
+        loadData(payload.email, payload.name, payload.picture, null, true);
     }
     window.handleCredentialResponse = handleCredentialResponse;
 
@@ -826,7 +825,7 @@
         const note = DOM.newUserNote.value.trim() || '-';
         closeModal(DOM.askNoteModal);
         renderSkeleton('Registering…');
-        loadData(state.pendingPayload.email, state.pendingPayload.name, state.pendingPayload.picture, note);
+        loadData(state.pendingPayload.email, state.pendingPayload.name, state.pendingPayload.picture, note, true);
     }
 
     function renderSkeleton(msg = 'Loading...') {
@@ -863,7 +862,7 @@
         if (!state.isLoggedIn || !state.currentUser) { openLogin(); return; }
 
         const { pic, name, email, roles } = state.currentUser;
-        $('modal-user-pic').src            = pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'U');
+        $('modal-user-pic').src           = pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'U');
         $('modal-user-name').textContent  = name || '';
         $('modal-user-email').textContent = email || '';
 
@@ -875,7 +874,7 @@
         openModal(DOM.userProfModal);
     }
 
-    function logout() {
+    function logout(silent = false) {
         closeModal(DOM.userProfModal);
         clearSession();
         Object.assign(state, {
@@ -893,14 +892,17 @@
         buildSimulateMenu();
         renderLinks(state.allLinks);
         updateNavbarImage();
-        toast('ออกจากระบบแล้ว', '', 'fas fa-sign-out-alt');
+        
+        if (!silent) {
+            toast('ออกจากระบบแล้ว', '', 'fas fa-sign-out-alt');
+        }
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 15 · DATA LOADING (GET request, now passing idToken)
+    // § 15 · DATA LOADING
     // ════════════════════════════════════════════════════════════════
 
-    async function loadData(userEmail = '', userName = '', userPic = '', userNote = null) {
+    async function loadData(userEmail = '', userName = '', userPic = '', userNote = null, isFreshLogin = false) {
         try {
             let url = API_URL;
             let queryParams = [];
@@ -928,10 +930,14 @@
             setSystemStatus('media', 'ok');
 
             if (data.authError) {
-                // Token invalid or expired
-                logout();
-                hideGlobalLoader();
-                toast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'error', 'fas fa-exclamation-triangle');
+                if (isFreshLogin) {
+                    logout(true);
+                    hideGlobalLoader();
+                    toast('ยืนยันตัวตนไม่ผ่าน กรุณาลองใหม่', 'error', 'fas fa-times');
+                } else {
+                    logout(true); 
+                    loadData(); 
+                }
                 return;
             }
 
@@ -971,6 +977,8 @@
 
                 state.viewAsRole = null;
                 DOM.viewAsText.textContent = `View As: ${roles.includes('admin') ? 'ADMIN' : roles[0].toUpperCase()}`;
+                
+                if (isFreshLogin) toast(`ยินดีต้อนรับ, ${userName.split(' ')[0]}`, 'success', 'fas fa-check-circle');
             }
 
             if (data.profile) {
@@ -1037,7 +1045,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 16 · LINK RENDER HELPERS (แก้ไขการใช้งาน POST method แทน GET)
+    // § 16 · LINK RENDER HELPERS
     // ════════════════════════════════════════════════════════════════
 
     function createGroupDivider(text, isStarredSection = false) {
@@ -1054,7 +1062,6 @@
         const link       = state.allLinks[idx];
         const newStarred = !link.starred;
 
-        // Optimistic update
         state.allLinks[idx] = { ...link, starred: newStarred };
         btnEl.classList.toggle('starred', newStarred);
         btnEl.innerHTML = `<i class="${newStarred ? 'fas' : 'far'} fa-star"></i>`;
@@ -1063,8 +1070,6 @@
         renderLinks(state.allLinks);
 
         try {
-            // Backend v3.0 ใช้ p.title, p.url, p.starred สำหรับ 'updateLink'
-            // หมายเหตุ: url ที่ Backend นำไปใช้ในโค้ดเก่าเราคือ "group" ของลิงก์
             const result = await postData('updateLink', {
                 title: link.title,
                 url: link.group || 'public',
@@ -1074,7 +1079,6 @@
             if (!result.success) throw new Error(result.message || 'Save failed');
             toast(newStarred ? 'Pinned!' : 'Unpinned', 'success', 'fas fa-star');
         } catch (err) {
-            // Rollback
             state.allLinks[idx] = { ...link, starred: !newStarred };
             renderLinks(state.allLinks);
             toast('บันทึกไม่สำเร็จ: ' + err.message, 'error', 'fas fa-exclamation-circle');
@@ -1253,7 +1257,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 18 · ADMIN DASHBOARD (ใช้ postData ในการสื่อสารกับ Backend)
+    // § 18 · ADMIN DASHBOARD
     // ════════════════════════════════════════════════════════════════
 
     function openAdminDashboard() {
@@ -1404,7 +1408,6 @@
         saveBtn.disabled    = true;
 
         try {
-            // แมปชื่อตัวแปรให้ตรงกับ Backend v3.0
             let params = {};
             if (action === 'updateRole') {
                 params = { targetEmail: param1, newRole: param2 };
@@ -1463,7 +1466,7 @@
     $('close-admin-btn').addEventListener('click',   () => closeModal(DOM.adminDashModal));
 
     $('open-admin-btn').addEventListener('click', openAdminDashboard);
-    $('logout-btn').addEventListener('click', logout);
+    $('logout-btn').addEventListener('click', () => logout(false));
 
     $('submit-note-btn').addEventListener('click', submitNewRegistration);
     $('new-user-note').addEventListener('keydown', (e) => {
