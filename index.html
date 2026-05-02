@@ -390,21 +390,22 @@
     // ════════════════════════════════════════════════════════════════
 
     const API_URL     = "https://script.google.com/macros/s/AKfycbwBYhFTW68AfN4cYUJYS1DG7vw-Ocykx5kslSUQIeJJlfu0oeBIdi9xAhVmorVWQ4q7rg/exec";
-    const SESSION_KEY = 'koomean_session_v2';
+    const SESSION_KEY = 'koomean_session_v3';
     const FETCH_TIMEOUT = 15000;
     const MAX_RETRIES = 2;
 
     const state = {
-        accessRoles   : ['public'],   // <- array of roles (supports multi-role)
-        viewAsRole    : null,         // <- admin simulate (single role)
+        accessRoles   : ['public'],   
+        viewAsRole    : null,         
         allLinks      : [],
         allUsers      : [],
         aboutText     : '',
         isLoggedIn    : false,
-        currentUser   : null,         // { email, name, pic, roles:[] }
+        idToken       : null,         // <--- New: เก็บ JWT Token สำหรับ Backend v3.0
+        currentUser   : null,         
         pendingPayload: null,
         sysStatus     : { api: 'checking', media: 'checking' },
-        inflightCtrl  : null,         // AbortController for latest fetch
+        inflightCtrl  : null,         
     };
 
     // ════════════════════════════════════════════════════════════════
@@ -498,8 +499,6 @@
         return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
 
-    /* ★ CORE: Parse role/group field into normalized lowercase array.
-       Supports "admin", "admin,blog", "vip, student, public", etc. */
     function parseRoles(input) {
         if (!input) return [];
         if (Array.isArray(input)) {
@@ -522,8 +521,8 @@
     // § 4 · SESSION PERSISTENCE
     // ════════════════════════════════════════════════════════════════
 
-    function saveSession(email, name, pic) {
-        try { localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name, pic })); }
+    function saveSession(email, name, pic, idToken) {
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name, pic, idToken })); }
         catch { /* quota or private mode */ }
     }
     function loadSession() {
@@ -535,11 +534,32 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 5 · FETCH HELPER (timeout + retry + abort)
+    // § 5 · FETCH HELPERS (สำหรับ POST ไปยัง Backend v3.0)
     // ════════════════════════════════════════════════════════════════
 
+    // Helper ใหม่สำหรับส่งแบบ POST พร้อมแนบ Token สำหรับ Admin Actions (Write)
+    async function postData(action, params = {}) {
+        if (!state.idToken) throw new Error("Authentication required");
+        
+        const formData = new URLSearchParams();
+        formData.append('action', action);
+        formData.append('idToken', state.idToken);
+        
+        for (const key in params) {
+            formData.append(key, params[key]);
+        }
+
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+    }
+
     async function robustFetch(url, opts = {}, retries = MAX_RETRIES) {
-        // Cancel previous request if still pending
         if (state.inflightCtrl) {
             try { state.inflightCtrl.abort(); } catch {}
         }
@@ -555,7 +575,6 @@
         } catch (err) {
             clearTimeout(timer);
             if (err.name === 'AbortError' && ctrl.signal.aborted && state.inflightCtrl !== ctrl) {
-                // Aborted because a newer call took over — silently drop
                 throw new Error('superseded');
             }
             if (retries > 0 && err.name !== 'AbortError') {
@@ -567,7 +586,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 6 · TOAST (replaces alert() for better UX)
+    // § 6 · TOAST 
     // ════════════════════════════════════════════════════════════════
 
     let _toastTimer = null;
@@ -670,7 +689,6 @@
             .forEach(m => { if (e.target === m) closeModal(m); });
     });
 
-    // Close on Esc
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal').forEach(m => { if (m.style.display === 'flex') closeModal(m); });
@@ -712,14 +730,13 @@
     });
 
     // ════════════════════════════════════════════════════════════════
-    // § 13 · ROLE SYSTEM (multi-role aware)
+    // § 13 · ROLE SYSTEM
     // ════════════════════════════════════════════════════════════════
 
     function userIsAdmin() {
         return state.isLoggedIn && state.currentUser?.roles?.includes('admin');
     }
 
-    /* Currently-effective roles, considering View-As simulation */
     function effectiveRoles() {
         if (userIsAdmin() && state.viewAsRole) {
             if (state.viewAsRole === 'admin') return ['admin', 'public'];
@@ -730,20 +747,15 @@
         return dedupe(roles);
     }
 
-    /* Does the user have access to link based on link.group? */
     function hasAccessToLink(link) {
         const linkGroups = parseRoles(link.group || 'public');
-        if (!linkGroups.length) return true; // no group = open
+        if (!linkGroups.length) return true;
         const eff = effectiveRoles();
-        // admin without simulation: full access
         if (eff.includes('admin') && !state.viewAsRole) return true;
-        // public links open to all
         if (linkGroups.includes('public')) return true;
-        // otherwise: intersection must exist
         return linkGroups.some(g => eff.includes(g));
     }
 
-    /* Is the link restricted (non-public)? */
     function isSpecialLink(link) {
         const linkGroups = parseRoles(link.group || 'public');
         return linkGroups.length > 0 && !linkGroups.includes('public');
@@ -802,12 +814,12 @@
 
         closeModal(DOM.loginModal);
         state.pendingPayload = payload;
+        state.idToken = res.credential; // เก็บ JWT ไว้ใช้เรียก API V3.0
         setSystemStatus('api', 'checking');
         renderSkeleton('Checking Account…');
 
         loadData(payload.email, payload.name, payload.picture, null);
     }
-    // expose to Google GSI
     window.handleCredentialResponse = handleCredentialResponse;
 
     function submitNewRegistration() {
@@ -851,7 +863,7 @@
         if (!state.isLoggedIn || !state.currentUser) { openLogin(); return; }
 
         const { pic, name, email, roles } = state.currentUser;
-        $('modal-user-pic').src           = pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'U');
+        $('modal-user-pic').src            = pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'U');
         $('modal-user-name').textContent  = name || '';
         $('modal-user-email').textContent = email || '';
 
@@ -868,6 +880,7 @@
         clearSession();
         Object.assign(state, {
             isLoggedIn   : false,
+            idToken      : null,
             currentUser  : null,
             accessRoles  : ['public'],
             viewAsRole   : null,
@@ -884,23 +897,43 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 15 · DATA LOADING
+    // § 15 · DATA LOADING (GET request, now passing idToken)
     // ════════════════════════════════════════════════════════════════
 
     async function loadData(userEmail = '', userName = '', userPic = '', userNote = null) {
         try {
             let url = API_URL;
+            let queryParams = [];
+
+            if (state.idToken) {
+                queryParams.push(`idToken=${encodeURIComponent(state.idToken)}`);
+            }
+
             if (userEmail) {
-                url += `?email=${encodeURIComponent(userEmail)}&name=${encodeURIComponent(userName)}`;
+                queryParams.push(`email=${encodeURIComponent(userEmail)}`);
+                queryParams.push(`name=${encodeURIComponent(userName)}`);
                 if (userNote !== null) {
-                    url += `&action=register&note=${encodeURIComponent(userNote)}`;
+                    queryParams.push(`action=register`);
+                    queryParams.push(`note=${encodeURIComponent(userNote)}`);
                 }
+            }
+
+            if (queryParams.length > 0) {
+                url += '?' + queryParams.join('&');
             }
 
             const data = await robustFetch(url);
 
             setSystemStatus('api',   'ok');
             setSystemStatus('media', 'ok');
+
+            if (data.authError) {
+                // Token invalid or expired
+                logout();
+                hideGlobalLoader();
+                toast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', 'error', 'fas fa-exclamation-triangle');
+                return;
+            }
 
             if (data.requireRegistration) {
                 renderLinks(state.allLinks);
@@ -910,7 +943,6 @@
             }
 
             if (userEmail && data.user) {
-                // ★ PARSE ROLES AS ARRAY (supports "admin,blog")
                 const roles = parseRoles(data.user.role);
                 if (!roles.length) roles.push('public');
 
@@ -923,7 +955,7 @@
                     roles: roles,
                 };
 
-                saveSession(userEmail, userName, userPic);
+                saveSession(userEmail, userName, userPic, state.idToken);
 
                 DOM.unlockBtn.classList.add('active');
                 DOM.unlockBtn.innerHTML = '<i class="fas fa-unlock"></i>';
@@ -937,7 +969,6 @@
                     DOM.navUserBadge.style.background = 'var(--accent-special)';
                 }
 
-                // Default view-as follows primary role
                 state.viewAsRole = null;
                 DOM.viewAsText.textContent = `View As: ${roles.includes('admin') ? 'ADMIN' : roles[0].toUpperCase()}`;
             }
@@ -959,7 +990,6 @@
                 }
             }
 
-            // Build apps dropdown
             const appsFrag = document.createDocumentFragment();
             if (data.apps?.length) {
                 data.apps.forEach(app => {
@@ -989,7 +1019,7 @@
             hideGlobalLoader();
 
         } catch (err) {
-            if (err.message === 'superseded') return; // silently drop
+            if (err.message === 'superseded') return; 
             console.error('loadData error:', err);
             setSystemStatus('api',   'error');
             setSystemStatus('media', 'error');
@@ -1007,7 +1037,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 16 · LINK RENDER HELPERS
+    // § 16 · LINK RENDER HELPERS (แก้ไขการใช้งาน POST method แทน GET)
     // ════════════════════════════════════════════════════════════════
 
     function createGroupDivider(text, isStarredSection = false) {
@@ -1033,27 +1063,27 @@
         renderLinks(state.allLinks);
 
         try {
-            const url = `${API_URL}`
-                + `?email=${encodeURIComponent(state.currentUser.email)}`
-                + `&action=updateLink`
-                + `&p1=${encodeURIComponent(link.title)}`
-                + `&p2=${encodeURIComponent(link.group || 'public')}`
-                + `&p3=${newStarred ? 'true' : 'false'}`;
-
-            const result = await robustFetch(url, {}, 1);
+            // Backend v3.0 ใช้ p.title, p.url, p.starred สำหรับ 'updateLink'
+            // หมายเหตุ: url ที่ Backend นำไปใช้ในโค้ดเก่าเราคือ "group" ของลิงก์
+            const result = await postData('updateLink', {
+                title: link.title,
+                url: link.group || 'public',
+                starred: newStarred
+            });
+            
             if (!result.success) throw new Error(result.message || 'Save failed');
             toast(newStarred ? 'Pinned!' : 'Unpinned', 'success', 'fas fa-star');
         } catch (err) {
-            if (err.message === 'superseded') return;
             // Rollback
             state.allLinks[idx] = { ...link, starred: !newStarred };
             renderLinks(state.allLinks);
-            toast('บันทึกไม่สำเร็จ', 'error', 'fas fa-exclamation-circle');
+            toast('บันทึกไม่สำเร็จ: ' + err.message, 'error', 'fas fa-exclamation-circle');
             console.error('toggleStarInline error:', err);
+        } finally {
+            btnEl.classList.remove('saving');
         }
     }
 
-    /* Create a small pill badge element */
     function makeBadgePill(role) {
         const badge = document.createElement('span');
         const icon  = document.createElement('i');
@@ -1080,7 +1110,6 @@
         let cardClass = 'link-card fade-in';
         if (link.starred) cardClass += ' starred-card';
         if (isSpecial) {
-            // Decorative class — if user is pure admin (non simulated) or has admin role → use admin color
             cardClass += (eff.includes('admin') && linkGroups.includes('admin')) ? ' admin-access' : ' special-access';
         }
         card.className = cardClass;
@@ -1100,13 +1129,10 @@
         card.appendChild(titleEl);
 
         if (isSpecial) {
-            // Badge-group shows ONLY roles that actually grant this user access (so UI doesn't lie)
             const matching = linkGroups.filter(g => g !== 'public' && eff.includes(g));
-            // Admin can access all: show literal link.group roles instead
             const toDisplay = matching.length ? matching : linkGroups.filter(g => g !== 'public');
             const group = document.createElement('div');
             group.className = 'badge-group';
-            // Limit to 2 badges max to keep UI clean
             toDisplay.slice(0, 2).forEach(role => group.appendChild(makeBadgePill(role)));
             if (toDisplay.length > 2) {
                 const more = document.createElement('span');
@@ -1117,7 +1143,6 @@
             card.appendChild(group);
         }
 
-        // Star button (admin only) or passive star display
         if (isAdmin) {
             const starBtn       = document.createElement('button');
             starBtn.className   = 'card-star-btn' + (link.starred ? ' starred' : '');
@@ -1151,7 +1176,6 @@
             return;
         }
 
-        // ★ Filter by effective roles (multi-role aware)
         const visible = linksData.filter(hasAccessToLink);
 
         if (!visible.length) {
@@ -1229,7 +1253,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 18 · ADMIN DASHBOARD
+    // § 18 · ADMIN DASHBOARD (ใช้ postData ในการสื่อสารกับ Backend)
     // ════════════════════════════════════════════════════════════════
 
     function openAdminDashboard() {
@@ -1299,7 +1323,6 @@
             saveBtn.addEventListener('click', () => {
                 const currentLink   = state.allLinks.find(l => l.title === link.title);
                 const currentStar   = currentLink ? currentLink.starred === true : false;
-                // Normalize: remove whitespace
                 const normalizedGroup = parseRoles(input.value).join(',') || 'public';
                 input.value = normalizedGroup;
                 updateAdminData('updateLink', link.title, normalizedGroup, currentStar, saveBtn);
@@ -1348,7 +1371,6 @@
             const controls         = document.createElement('div');
             controls.style.cssText = 'display:flex;align-items:center;';
 
-            /* Free-form text input to support multi-role (admin,blog) */
             const input       = document.createElement('input');
             input.type        = 'text';
             input.className   = 'admin-select';
@@ -1382,17 +1404,15 @@
         saveBtn.disabled    = true;
 
         try {
-            let url = `${API_URL}`
-                + `?email=${encodeURIComponent(state.currentUser.email)}`
-                + `&action=${encodeURIComponent(action)}`
-                + `&p1=${encodeURIComponent(param1)}`
-                + `&p2=${encodeURIComponent(param2)}`;
-
-            if (action === 'updateLink') {
-                url += `&p3=${starredValue === true ? 'true' : 'false'}`;
+            // แมปชื่อตัวแปรให้ตรงกับ Backend v3.0
+            let params = {};
+            if (action === 'updateRole') {
+                params = { targetEmail: param1, newRole: param2 };
+            } else if (action === 'updateLink') {
+                params = { title: param1, url: param2, starred: starredValue === true };
             }
 
-            const result = await robustFetch(url, {}, 1);
+            const result = await postData(action, params);
             if (!result.success) throw new Error(result.message || 'Unknown error');
 
             saveBtn.textContent      = '✔';
@@ -1411,11 +1431,6 @@
             }, 1200);
 
         } catch (err) {
-            if (err.message === 'superseded') {
-                saveBtn.textContent = original;
-                saveBtn.disabled    = false;
-                return;
-            }
             toast('Error: ' + (err.message || 'Unknown'), 'error', 'fas fa-exclamation-circle');
             saveBtn.textContent      = 'Failed';
             saveBtn.style.background = 'var(--accent-danger)';
@@ -1467,7 +1482,8 @@
     startClock();
 
     const savedSession = loadSession();
-    if (savedSession?.email) {
+    if (savedSession?.email && savedSession?.idToken) {
+        state.idToken = savedSession.idToken;
         renderSkeleton('Restoring Session…');
         loadData(savedSession.email, savedSession.name || '', savedSession.pic || '');
     } else {
