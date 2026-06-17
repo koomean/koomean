@@ -118,7 +118,7 @@
 
         /* Link cards */
         .container { width: 100%; max-width: 600px; padding: 0 20px 40px 20px; display: flex; flex-direction: column; gap: 15px; }
-        .link-card { background: var(--card-bg); padding: 20px 25px; border-radius: 20px; text-decoration: none; color: var(--text-main); display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.06); transition: all .4s; cursor: pointer; position: relative; overflow: hidden; backdrop-filter: blur(15px); }
+        .link-card { background: var(--card-bg); padding: 20px 25px; border-radius: 20px; text-decoration: none; color: var(--text-main); display: flex; align-items: center; border: 1px solid rgba(255,255,255,0.06); transition: background .4s, transform .4s, border-color .4s, box-shadow .4s; cursor: pointer; position: relative; overflow: hidden; backdrop-filter: blur(15px); content-visibility: auto; contain-intrinsic-size: 76px; }
         .link-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent); transform: skewX(-25deg); transition: .6s ease-in-out; }
         .link-card:hover::before { left: 150%; }
         .link-card:hover { background: var(--card-hover); transform: translateY(-6px) scale(1.015); border-color: rgba(255,255,255,0.15); box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px rgba(41, 151, 255, 0.15); }
@@ -233,6 +233,15 @@
             .nav-left { gap: 12px; }
             .nav-right { gap: 10px; }
             .modal-content { padding: 28px 22px; }
+        }
+
+        @media (max-width: 700px), (prefers-reduced-motion: reduce) {
+            body::before, body::after { display: none; animation: none; }
+            .glow-orb, .g-loader-text, .profile-img { animation: none; }
+            .navbar, .dropdown-content, .search-input, .link-card, .unlock-btn, .modal, #toast {
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
         }
     </style>
 </head>
@@ -942,7 +951,9 @@
     async function loadData(userEmail = '', userName = '', userPic = '', userNote = null, isFreshLogin = false) {
         try {
             let url = API_URL;
-            let queryParams = [];
+            let queryParams = [
+                `action=${userNote !== null ? 'register' : 'bootstrap'}`
+            ];
 
             if (state.idToken) {
                 queryParams.push(`idToken=${encodeURIComponent(state.idToken)}`);
@@ -952,7 +963,6 @@
                 queryParams.push(`email=${encodeURIComponent(userEmail)}`);
                 queryParams.push(`name=${encodeURIComponent(userName)}`);
                 if (userNote !== null) {
-                    queryParams.push(`action=register`);
                     queryParams.push(`note=${encodeURIComponent(userNote)}`);
                 }
             }
