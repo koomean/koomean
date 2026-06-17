@@ -400,6 +400,12 @@
             >
                 <i class="fas fa-unlock"></i> Unlock
             </button>
+
+            <div
+                id="code-unlock-results"
+                style="display: none; margin-top: 18px; text-align: left; max-height: 260px; overflow-y: auto; padding-right: 4px;"
+            ></div>
+
             <button
                 id="open-login-from-code-btn"
                 style="background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.12); padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; width: 100%; font-size: .95rem; transition: .3s; font-family: inherit; margin-top: 12px;"
@@ -467,6 +473,7 @@
         loginModal    : $('login-modal'),
         codeUnlockModal: $('code-unlock-modal'),
         linkAccessCode : $('link-access-code'),
+        codeUnlockResults: $('code-unlock-results'),
         userProfModal : $('user-profile-modal'),
         askNoteModal  : $('ask-note-modal'),
         adminDashModal: $('admin-dashboard-modal'),
@@ -1479,10 +1486,83 @@
     // § 19 · PUBLIC CODE UNLOCK
     // ════════════════════════════════════════════════════════════════
 
+    function resetCodeUnlockResults() {
+        if (!DOM.codeUnlockResults) return;
+        DOM.codeUnlockResults.innerHTML = '';
+        DOM.codeUnlockResults.style.display = 'none';
+    }
+
     function openCodeUnlock() {
         DOM.linkAccessCode.value = '';
+        resetCodeUnlockResults();
         openModal(DOM.codeUnlockModal);
         setTimeout(() => DOM.linkAccessCode.focus(), 120);
+    }
+
+    function openUnlockedLink(link) {
+        if (!link || !isSafeUrl(link.url)) {
+            toast('URL ไม่ถูกต้อง', 'error', 'fas fa-times-circle');
+            return;
+        }
+
+        closeModal(DOM.codeUnlockModal);
+        DOM.linkAccessCode.value = '';
+        resetCodeUnlockResults();
+        toast('เปิดลิงก์: ' + (link.title || 'Unlocked'), 'success', 'fas fa-unlock');
+
+        const opened = window.open(link.url, '_blank', 'noopener,noreferrer');
+        if (!opened) {
+            window.location.href = link.url;
+        }
+    }
+
+    function renderUnlockChoices(links) {
+        const box = DOM.codeUnlockResults;
+        if (!box) return;
+
+        box.innerHTML = '';
+        box.style.display = 'block';
+
+        const header = document.createElement('div');
+        header.style.cssText = 'color: var(--text-main); font-weight: 700; margin-bottom: 10px; text-align: center;';
+        header.textContent = `พบ ${links.length} ลิงก์ เลือกอันที่ต้องการเปิด`;
+        box.appendChild(header);
+
+        links.forEach((link) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.style.cssText = 'width:100%; display:flex; align-items:center; gap:12px; text-align:left; padding:13px 14px; margin-bottom:9px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--text-main); cursor:pointer; font-family:inherit; transition:.2s;';
+
+            const icon = document.createElement('i');
+            icon.className = link.icon || 'fas fa-link';
+            icon.style.cssText = 'width:22px; text-align:center; color:var(--accent-special); flex-shrink:0;';
+
+            const textWrap = document.createElement('div');
+            textWrap.style.cssText = 'min-width:0; flex:1;';
+
+            const title = document.createElement('div');
+            title.style.cssText = 'font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+            title.textContent = link.title || 'Untitled Link';
+
+            const url = document.createElement('div');
+            url.style.cssText = 'font-size:.78rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;';
+            url.textContent = link.url || '';
+
+            textWrap.append(title, url);
+            item.append(icon, textWrap);
+
+            item.addEventListener('mouseenter', () => {
+                item.style.background = 'rgba(255,255,255,0.1)';
+                item.style.transform = 'translateY(-2px)';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.background = 'rgba(255,255,255,0.05)';
+                item.style.transform = 'translateY(0)';
+            });
+            item.addEventListener('click', () => openUnlockedLink(link));
+
+            box.appendChild(item);
+        });
     }
 
     async function unlockByCode() {
@@ -1499,6 +1579,7 @@
 
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        resetCodeUnlockResults();
 
         const popup = window.open('', '_blank');
 
@@ -1520,19 +1601,31 @@
                 throw new Error('Server response ไม่ถูกต้อง');
             }
 
-            if (!result.success || !isSafeUrl(result.url)) {
+            const links = Array.isArray(result.matches)
+                ? result.matches.filter(link => link && isSafeUrl(link.url))
+                : (isSafeUrl(result.url) ? [{ title: result.title, url: result.url, icon: result.icon }] : []);
+
+            if (!result.success || !links.length) {
                 throw new Error(result.message || 'รหัสไม่ถูกต้อง');
             }
 
-            closeModal(DOM.codeUnlockModal);
-            DOM.linkAccessCode.value = '';
-            toast('เปิดลิงก์: ' + (result.title || 'Unlocked'), 'success', 'fas fa-unlock');
+            if (links.length === 1) {
+                closeModal(DOM.codeUnlockModal);
+                DOM.linkAccessCode.value = '';
+                resetCodeUnlockResults();
+                toast('เปิดลิงก์: ' + (links[0].title || 'Unlocked'), 'success', 'fas fa-unlock');
 
-            if (popup) {
-                popup.location.href = result.url;
-            } else {
-                window.location.href = result.url;
+                if (popup) {
+                    popup.location.href = links[0].url;
+                } else {
+                    window.location.href = links[0].url;
+                }
+                return;
             }
+
+            if (popup) popup.close();
+            renderUnlockChoices(links);
+            toast(`พบ ${links.length} ลิงก์ เลือกอันที่ต้องการเปิด`, 'success', 'fas fa-list');
 
         } catch (err) {
             if (popup) popup.close();
@@ -1559,7 +1652,10 @@
     $('close-about-btn').addEventListener('click',   () => closeModal(DOM.aboutModal));
     $('close-status-btn').addEventListener('click',  () => closeModal(DOM.statusModal));
     $('close-login-btn').addEventListener('click',   () => closeModal(DOM.loginModal));
-    $('close-code-unlock-btn').addEventListener('click', () => closeModal(DOM.codeUnlockModal));
+    $('close-code-unlock-btn').addEventListener('click', () => {
+        closeModal(DOM.codeUnlockModal);
+        resetCodeUnlockResults();
+    });
     $('close-profile-btn').addEventListener('click', () => closeModal(DOM.userProfModal));
     $('close-note-btn').addEventListener('click',    () => closeModal(DOM.askNoteModal));
     $('close-admin-btn').addEventListener('click',   () => closeModal(DOM.adminDashModal));
