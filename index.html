@@ -381,7 +381,35 @@
         </div>
     </div>
 
-    <button class="unlock-btn" id="unlockBtn" title="Sign In / Profile"><i class="fas fa-lock"></i></button>
+    <div id="code-unlock-modal" class="modal">
+        <div class="modal-content" style="text-align: center; padding-top: 45px;">
+            <button class="close-modal" id="close-code-unlock-btn" aria-label="Close">&times;</button>
+            <h2 style="justify-content: center; display: flex; align-items: center; gap: 10px;"><i class="fas fa-key"></i> Unlock Link</h2>
+            <p style="margin-bottom: 20px; font-size: 0.95rem;">ใส่รหัสเพื่อเปิดลิงก์พิเศษโดยไม่ต้อง Login</p>
+            <input
+                type="password"
+                id="link-access-code"
+                class="search-input"
+                placeholder="Access Code"
+                autocomplete="off"
+                style="width: 100%; margin-bottom: 20px; text-align: center; padding: 16px 20px;"
+            >
+            <button
+                id="submit-code-unlock-btn"
+                style="background: var(--accent-special); color: #fff; border: none; padding: 14px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; transition: .3s; font-family: inherit;"
+            >
+                <i class="fas fa-unlock"></i> Unlock
+            </button>
+            <button
+                id="open-login-from-code-btn"
+                style="background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.12); padding: 12px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; width: 100%; font-size: .95rem; transition: .3s; font-family: inherit; margin-top: 12px;"
+            >
+                <i class="fas fa-user-circle"></i> Sign in with Google
+            </button>
+        </div>
+    </div>
+
+    <button class="unlock-btn" id="unlockBtn" title="Unlock Link"><i class="fas fa-lock"></i></button>
     <div id="toast"></div>
 
     <script>
@@ -437,6 +465,8 @@
         aboutModal    : $('about-modal'),
         statusModal   : $('status-modal'),
         loginModal    : $('login-modal'),
+        codeUnlockModal: $('code-unlock-modal'),
+        linkAccessCode : $('link-access-code'),
         userProfModal : $('user-profile-modal'),
         askNoteModal  : $('ask-note-modal'),
         adminDashModal: $('admin-dashboard-modal'),
@@ -684,7 +714,7 @@
             document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
         }
         [DOM.aboutModal, DOM.statusModal, DOM.loginModal,
-         DOM.userProfModal, DOM.adminDashModal, DOM.askNoteModal]
+         DOM.codeUnlockModal, DOM.userProfModal, DOM.adminDashModal, DOM.askNoteModal]
             .forEach(m => { if (e.target === m) closeModal(m); });
     });
 
@@ -1446,7 +1476,75 @@
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 19 · EVENT WIRING
+    // § 19 · PUBLIC CODE UNLOCK
+    // ════════════════════════════════════════════════════════════════
+
+    function openCodeUnlock() {
+        DOM.linkAccessCode.value = '';
+        openModal(DOM.codeUnlockModal);
+        setTimeout(() => DOM.linkAccessCode.focus(), 120);
+    }
+
+    async function unlockByCode() {
+        const code = DOM.linkAccessCode.value.trim();
+
+        if (!code) {
+            toast('กรุณากรอกรหัส', 'error', 'fas fa-key');
+            DOM.linkAccessCode.focus();
+            return;
+        }
+
+        const btn = $('submit-code-unlock-btn');
+        const oldHtml = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+
+        const popup = window.open('', '_blank');
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append('action', 'unlockByCode');
+            formData.append('code', code);
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            });
+
+            let result = null;
+            try {
+                result = await res.json();
+            } catch (_) {
+                throw new Error('Server response ไม่ถูกต้อง');
+            }
+
+            if (!result.success || !isSafeUrl(result.url)) {
+                throw new Error(result.message || 'รหัสไม่ถูกต้อง');
+            }
+
+            closeModal(DOM.codeUnlockModal);
+            DOM.linkAccessCode.value = '';
+            toast('เปิดลิงก์: ' + (result.title || 'Unlocked'), 'success', 'fas fa-unlock');
+
+            if (popup) {
+                popup.location.href = result.url;
+            } else {
+                window.location.href = result.url;
+            }
+
+        } catch (err) {
+            if (popup) popup.close();
+            toast(err.message || 'ปลดล็อกไม่สำเร็จ', 'error', 'fas fa-times-circle');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = oldHtml;
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // § 20 · EVENT WIRING
     // ════════════════════════════════════════════════════════════════
 
     $('apps-dropbtn').addEventListener('click', () =>
@@ -1456,11 +1554,12 @@
     $('about-btn').addEventListener('click', openAbout);
     $('status-btn').addEventListener('click', openStatus);
     $('profile-btn').addEventListener('click', handleProfileClick);
-    DOM.unlockBtn.addEventListener('click', handleProfileClick);
+    DOM.unlockBtn.addEventListener('click', openCodeUnlock);
 
     $('close-about-btn').addEventListener('click',   () => closeModal(DOM.aboutModal));
     $('close-status-btn').addEventListener('click',  () => closeModal(DOM.statusModal));
     $('close-login-btn').addEventListener('click',   () => closeModal(DOM.loginModal));
+    $('close-code-unlock-btn').addEventListener('click', () => closeModal(DOM.codeUnlockModal));
     $('close-profile-btn').addEventListener('click', () => closeModal(DOM.userProfModal));
     $('close-note-btn').addEventListener('click',    () => closeModal(DOM.askNoteModal));
     $('close-admin-btn').addEventListener('click',   () => closeModal(DOM.adminDashModal));
@@ -1473,12 +1572,21 @@
         if (e.key === 'Enter') submitNewRegistration();
     });
 
+    $('submit-code-unlock-btn').addEventListener('click', unlockByCode);
+    $('link-access-code').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') unlockByCode();
+    });
+    $('open-login-from-code-btn').addEventListener('click', () => {
+        closeModal(DOM.codeUnlockModal);
+        openLogin();
+    });
+
     document.querySelectorAll('.admin-tab[data-tab]').forEach(btn => {
         btn.addEventListener('click', () => switchAdminTab(btn.dataset.tab));
     });
 
     // ════════════════════════════════════════════════════════════════
-    // § 20 · INIT
+    // § 21 · INIT
     // ════════════════════════════════════════════════════════════════
 
     renderOverallStatus();
