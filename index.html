@@ -255,6 +255,7 @@
         /* Skeleton */
         .sk-card { background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: skGlow 1.6s infinite; height: 66px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); }
         @keyframes skGlow { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .loader { border: 3px solid rgba(255,255,255,0.05); border-radius: 50%; border-top: 3px solid var(--accent); width: 40px; height: 40px; animation: spin 1s infinite linear; margin: 30px auto; }
 
         /* Admin panel */
         .admin-tab-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
@@ -499,17 +500,17 @@
     const MAX_RETRIES = 2;
 
     const state = {
-        accessRoles   : ['public'],
-        viewAsRole    : null,
+        accessRoles   : ['public'],   
+        viewAsRole    : null,         
         allLinks      : [],
         allUsers      : [],
         aboutText     : '',
         isLoggedIn    : false,
         idToken       : null,
-        currentUser   : null,
+        currentUser   : null,         
         pendingPayload: null,
         sysStatus     : { api: 'checking', media: 'checking' },
-        inflightCtrl  : null,
+        inflightCtrl  : null,         
     };
 
     // ════════════════════════════════════════════════════════════════
@@ -561,9 +562,7 @@
 
     function hideGlobalLoader() {
         const loader = $('global-loader');
-        if (!loader) return;
-        loader.classList.add('hidden');
-        setTimeout(() => { if (loader.parentNode) loader.remove(); }, 1000);
+        if (loader) loader.classList.add('hidden');
     }
 
     function isSafeUrl(url) {
@@ -620,626 +619,1230 @@
     }
 
     function dedupe(arr) {
-        return [...new Set(arr)];
-    }
-
-    // Scroll lock manager
-    function getScrollbarWidth() {
-        return window.innerWidth - document.documentElement.clientWidth;
-    }
-
-    function lockBodyScroll() {
-        const w = getScrollbarWidth();
-        document.body.style.setProperty('--scrollbar-width', w + 'px');
-        document.body.classList.add('modal-open');
-    }
-
-    function unlockBodyScroll() {
-        document.body.classList.remove('modal-open');
-        document.body.style.removeProperty('--scrollbar-width');
-    }
-
-    // Modal helpers
-    const openModal = (modalEl) => {
-        if (!modalEl) return;
-        modalEl.classList.add('show');
-        modalEl.setAttribute('aria-hidden', 'false');
-        lockBodyScroll();
-        trapFocus(modalEl);
-    };
-
-    const closeModal = (modalEl) => {
-        if (!modalEl) return;
-        modalEl.classList.remove('show');
-        modalEl.setAttribute('aria-hidden', 'true');
-        // Only unlock if no other modal is open
-        if (!document.querySelector('.modal.show')) unlockBodyScroll();
-    };
-
-    // Toast queue system
-    const toastQueue = [];
-    let toastProcessing = false;
-    function showToast(message, type = 'success') {
-        toastQueue.push({ message, type });
-        if (!toastProcessing) processToastQueue();
-    }
-    function processToastQueue() {
-        if (toastQueue.length === 0) { toastProcessing = false; return; }
-        toastProcessing = true;
-        const { message, type } = toastQueue.shift();
-        const toast = $('toast');
-        if (!toast) { toastProcessing = false; return; }
-        toast.textContent = message;
-        toast.className = type; // success | error
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(processToastQueue, 300);
-        }, 2500);
-    }
-
-    // Fetch with Abort and timeout
-    async function fetchWithTimeout(url, options = {}, timeoutMs = FETCH_TIMEOUT) {
-        if (state.inflightCtrl) {
-            try { state.inflightCtrl.abort(); } catch(e){}
-        }
-        const controller = new AbortController();
-        state.inflightCtrl = controller;
-        const id = setTimeout(() => controller.abort(), timeoutMs);
-        try {
-            const res = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(id);
-            return res;
-        } catch (err) {
-            clearTimeout(id);
-            if (err.name === 'AbortError') throw new Error('Request timed out');
-            throw err;
-        } finally {
-            state.inflightCtrl = null;
-        }
-    }
-
-    // Focus trap for modal accessibility
-    function trapFocus(element) {
-        const focusable = element.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        first?.focus();
-        element._tabHandler = (e) => {
-            if (e.key !== 'Tab') return;
-            if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
-            else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
-        };
-        element.addEventListener('keydown', element._tabHandler);
-    }
-    function removeTrap(element) {
-        if (element._tabHandler) element.removeEventListener('keydown', element._tabHandler);
+        const seen = new Set();
+        const out = [];
+        for (const x of arr) { if (!seen.has(x)) { seen.add(x); out.push(x); } }
+        return out;
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 4 · API HELPERS
+    // § 4 · SESSION PERSISTENCE
     // ════════════════════════════════════════════════════════════════
 
-    async function apiGet(action, params = {}) {
-        const q = new URLSearchParams({ action, ...params });
-        const res = await fetchWithTimeout(`${API_URL}?${q.toString()}`);
-        return res.json();
+    function saveSession(email, name, pic, idToken) {
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name, pic, idToken })); }
+        catch { /* quota or private mode */ }
+    }
+    function loadSession() {
+        try { const raw = localStorage.getItem(SESSION_KEY); return raw ? JSON.parse(raw) : null; }
+        catch { return null; }
+    }
+    function clearSession() {
+        try { localStorage.removeItem(SESSION_KEY); } catch {}
     }
 
-    async function apiPost(action, payload) {
-        const res = await fetchWithTimeout(API_URL, {
+    // ════════════════════════════════════════════════════════════════
+    // § 5 · FETCH HELPERS
+    // ════════════════════════════════════════════════════════════════
+
+    async function postData(action, params = {}) {
+        if (!state.idToken) throw new Error("Authentication required");
+        
+        const formData = new URLSearchParams();
+        formData.append('action', action);
+        formData.append('idToken', state.idToken);
+        
+        for (const key in params) {
+            formData.append(key, params[key]);
+        }
+
+        const res = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, ...payload })
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
         });
-        return res.json();
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+    }
+
+    async function robustFetch(url, opts = {}, retries = MAX_RETRIES) {
+        if (state.inflightCtrl) {
+            try { state.inflightCtrl.abort(); } catch {}
+        }
+        const ctrl = new AbortController();
+        state.inflightCtrl = ctrl;
+        const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
+
+        try {
+            const res = await fetch(url, { ...opts, signal: ctrl.signal });
+            clearTimeout(timer);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        } catch (err) {
+            clearTimeout(timer);
+            if (err.name === 'AbortError' && ctrl.signal.aborted && state.inflightCtrl !== ctrl) {
+                throw new Error('superseded');
+            }
+            if (retries > 0 && err.name !== 'AbortError') {
+                await new Promise(r => setTimeout(r, 600));
+                return robustFetch(url, opts, retries - 1);
+            }
+            throw err;
+        }
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 5 · RENDERING
+    // § 6 · TOAST 
     // ════════════════════════════════════════════════════════════════
 
-    function renderLinks(links) {
-        const container = DOM.linksContainer;
-        const term = (DOM.searchInput?.value || '').trim().toLowerCase();
-        const activeRoles = state.viewAsRole ? [state.viewAsRole] : state.accessRoles;
+    let _toastTimer = null;
+    function toast(msg, type = '', icon = '') {
+        const el = $('toast');
+        clearTimeout(_toastTimer);
+        el.className = '';
+        if (type) el.classList.add(type);
+        el.innerHTML = (icon ? `<i class="${icon}"></i>` : '') + escHtml(msg);
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+        _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+    }
 
-        let filtered = links.filter(l => {
-            const roles = parseRoles(l.role || l.roles || 'public');
-            const visible = roles.includes('public') || roles.some(r => activeRoles.includes(r));
-            if (!visible) return false;
-            if (term) {
-                const t = `${l.title||''} ${l.url||''} ${l.icon||''}`.toLowerCase();
-                return t.includes(term);
+    // ════════════════════════════════════════════════════════════════
+    // § 7 · SYSTEM STATUS
+    // ════════════════════════════════════════════════════════════════
+
+    const STATUS_CONFIG = {
+        ok      : { cls: 'status-ok',       label: 'Operational' },
+        error   : { cls: 'status-error',    label: 'Outage'      },
+        checking: { cls: 'status-checking', label: 'Checking...' },
+    };
+
+    function setSystemStatus(component, status) {
+        state.sysStatus[component] = status;
+        renderOverallStatus();
+    }
+
+    function applyBadge(el, status) {
+        const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.checking;
+        if (!el) return;
+        el.className   = `status-badge ${cfg.cls}`;
+        el.textContent = cfg.label;
+    }
+
+    function renderOverallStatus() {
+        const { api, media } = state.sysStatus;
+        applyBadge(DOM.badgeApi,   api);
+        applyBadge(DOM.badgeMedia, media);
+        if (!DOM.navStatusDot || !DOM.navStatusText) return;
+        if (api === 'error' || media === 'error') {
+            DOM.navStatusDot.className    = 'status-dot error';
+            DOM.navStatusText.textContent = 'System Issue';
+            DOM.navStatusText.style.color = 'var(--accent-danger)';
+        } else if (api === 'checking' || media === 'checking') {
+            DOM.navStatusDot.className    = 'status-dot checking';
+            DOM.navStatusText.textContent = 'Checking...';
+            DOM.navStatusText.style.color = '#ffcc00';
+        } else {
+            DOM.navStatusDot.className    = 'status-dot ok';
+            DOM.navStatusText.textContent = 'All Systems Normal';
+            DOM.navStatusText.style.color = 'var(--accent-admin)';
+        }
+    }
+
+    async function fetchStatusProbe(action) {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const probeUrl = `${API_URL}?action=${encodeURIComponent(action)}&_=${Date.now()}`;
+
+        try {
+            const res = await fetch(probeUrl, { cache: 'no-store', signal: ctrl.signal });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const text = await res.text();
+            try {
+                return JSON.parse(text);
+            } catch (_) {
+                if (action === 'ping' && text.trim()) return { success: true, status: text.trim() };
+                throw new Error('Invalid JSON response');
             }
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    function mediaComponentsReady() {
+        const hasCoreMedia = Boolean(DOM.mainProfileImg && DOM.navProfileImg && DOM.youtubeIframe);
+        const currentImg = DOM.mainProfileImg?.src ? DOM.mainProfileImg : DOM.navProfileImg;
+        const imageReady = !currentImg || currentImg.complete !== false;
+        return hasCoreMedia && imageReady;
+    }
+
+    async function checkSystemStatus({ notify = false } = {}) {
+        setSystemStatus('api', 'checking');
+        setSystemStatus('media', 'checking');
+
+        try {
+            let data = null;
+            try { data = await fetchStatusProbe('ping'); } catch (_) {}
+            if (!data || data.success === false || data.authError) {
+                data = await fetchStatusProbe('bootstrap');
+            }
+
+            if (!data || data.success === false || data.authError) {
+                throw new Error(data?.message || 'API returned an unhealthy response');
+            }
+
+            setSystemStatus('api', 'ok');
+            setSystemStatus('media', mediaComponentsReady() ? 'ok' : 'error');
+            if (notify) toast('ตรวจสอบเว็บไซต์สำเร็จ', 'success', 'fas fa-check-circle');
             return true;
-        });
+        } catch (err) {
+            setSystemStatus('api', 'error');
+            setSystemStatus('media', mediaComponentsReady() ? 'ok' : 'error');
+            if (notify) toast('ตรวจสอบเว็บไซต์ไม่สำเร็จ: ' + (err.message || 'Unknown error'), 'error', 'fas fa-triangle-exclamation');
+            return false;
+        }
+    }
 
-        // Sort: starred first, then by order/priority
-        const starred = new Set((state.currentUser?.starred || []));
-        filtered.sort((a, b) => {
-            const as = starred.has(a.id || a.url) ? 1 : 0;
-            const bs = starred.has(b.id || b.url) ? 1 : 0;
-            if (bs !== as) return bs - as;
-            return (a.order || 0) - (b.order || 0);
-        });
+    // ════════════════════════════════════════════════════════════════
+    // § 8 · CLOCK
+    // ════════════════════════════════════════════════════════════════
 
-        if (filtered.length === 0 && links.length > 0) {
-            container.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding: 20px;">No links found.</div>';
+    function startClock() {
+        const tick = () => {
+            DOM.navClock.textContent = new Date().toLocaleTimeString('th-TH', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            });
+        };
+        tick();
+        setInterval(tick, 1000);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // § 9 · INTERSECTION OBSERVER
+    // ════════════════════════════════════════════════════════════════
+
+    const fadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('visible'), i * 60);
+                fadeObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+
+    // ════════════════════════════════════════════════════════════════
+    // § 10 · MODAL HELPERS
+    // ════════════════════════════════════════════════════════════════
+
+    const openModal  = (el) => {
+        if (!el) return;
+        el.style.display = 'flex';
+        el.classList.add('show');
+        el.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+    };
+    const closeModal = (el) => {
+        if (!el) return;
+        el.style.display = 'none';
+        el.classList.remove('show');
+        el.setAttribute('aria-hidden', 'true');
+        if (!document.querySelector('.modal.show')) document.body.classList.remove('modal-open');
+    };
+
+    function openAbout()  { DOM.modalText.textContent = state.aboutText || 'No info.'; openModal(DOM.aboutModal); }
+    function openStatus() { openModal(DOM.statusModal); checkSystemStatus({ notify: false }); }
+    function openLogin()  { openModal(DOM.loginModal);  }
+
+    window.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+        }
+        [DOM.aboutModal, DOM.statusModal, DOM.loginModal,
+         DOM.codeUnlockModal, DOM.userProfModal, DOM.adminDashModal, DOM.askNoteModal]
+            .forEach(m => { if (e.target === m) closeModal(m); });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal').forEach(m => { if (m.style.display === 'flex' || m.classList.contains('show')) closeModal(m); });
+            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+        }
+    });
+
+    // ════════════════════════════════════════════════════════════════
+    // § 11 · DROPDOWN HELPERS
+    // ════════════════════════════════════════════════════════════════
+
+    function toggleDropdown(targetId, otherIds = []) {
+        $(targetId).classList.toggle('show');
+        otherIds.forEach(id => $(id).classList.remove('show'));
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // § 12 · SEARCH
+    // ════════════════════════════════════════════════════════════════
+
+    function handleSearchInput() {
+        const term = DOM.searchInput.value.toLowerCase().trim();
+        DOM.searchClear.classList.toggle('visible', term.length > 0);
+        if (term) {
+            const filtered = state.allLinks.filter(l =>
+                (l.title || '').toLowerCase().includes(term) ||
+                (l.url || '').toLowerCase().includes(term)
+            );
+            renderLinks(filtered);
+        } else {
+            renderLinks(state.allLinks);
+        }
+    }
+    DOM.searchInput.addEventListener('input', debounce(handleSearchInput, 150));
+    DOM.searchClear.addEventListener('click', () => {
+        DOM.searchInput.value = '';
+        handleSearchInput();
+        DOM.searchInput.focus();
+    });
+
+    // ════════════════════════════════════════════════════════════════
+    // § 13 · ROLE SYSTEM
+    // ════════════════════════════════════════════════════════════════
+
+    function userIsAdmin() {
+        return state.isLoggedIn && state.currentUser?.roles?.includes('admin');
+    }
+
+    function effectiveRoles() {
+        if (userIsAdmin() && state.viewAsRole) {
+            if (state.viewAsRole === 'admin') return ['admin', 'public'];
+            return [state.viewAsRole, 'public'];
+        }
+        const roles = state.accessRoles.slice();
+        if (!roles.includes('public')) roles.push('public');
+        return dedupe(roles);
+    }
+
+    function hasAccessToLink(link) {
+        const linkGroups = parseRoles(link.group || 'public');
+        if (!linkGroups.length) return true;
+        const eff = effectiveRoles();
+        if (eff.includes('admin') && !state.viewAsRole) return true;
+        if (linkGroups.includes('public')) return true;
+        return linkGroups.some(g => eff.includes(g));
+    }
+
+    function isSpecialLink(link) {
+        const linkGroups = parseRoles(link.group || 'public');
+        return linkGroups.length > 0 && !linkGroups.includes('public');
+    }
+
+    function extractUniqueRoles() {
+        const roles = new Set(['admin', 'public']);
+        state.allLinks.forEach(link => parseRoles(link.group).forEach(g => roles.add(g)));
+        state.allUsers.forEach(user => parseRoles(user.role).forEach(g => roles.add(g)));
+        return Array.from(roles).sort();
+    }
+
+    function buildSimulateMenu() {
+        if (!userIsAdmin()) {
+            DOM.simulateMenu.style.display = 'none';
             return;
         }
+        DOM.simulateMenu.style.display = 'block';
+        const frag = document.createDocumentFragment();
 
-        let html = '';
-        let hasStarredHeader = false;
-        let hasNormalHeader = false;
+        const noneItem = document.createElement('a');
+        noneItem.textContent = '✨ View As Yourself';
+        noneItem.style.color = 'var(--accent-admin)';
+        noneItem.addEventListener('click', (e) => { e.preventDefault(); simulateRole(null); });
+        frag.appendChild(noneItem);
 
-        filtered.forEach(link => {
-            const isStar = starred.has(link.id || link.url);
-            if (isStar && !hasStarredHeader) {
-                html += '<div class="group-divider starred-divider"><i class="fas fa-star" style="margin-right:6px;"></i>Starred</div>';
-                hasStarredHeader = true;
-            }
-            if (!isStar && !hasNormalHeader) {
-                html += '<div class="group-divider">Links</div>';
-                hasNormalHeader = true;
-            }
-
-            const roles = parseRoles(link.role || link.roles || 'public');
-            const isAdmin = roles.includes('admin');
-            const isVip = roles.includes('vip') || roles.includes('special');
-            const cardClass = ['link-card'];
-            if (isAdmin) cardClass.push('admin-access');
-            if (isVip) cardClass.push('special-access');
-            if (isStar) cardClass.push('starred-card');
-
-            const color = getIconColor(link.icon);
-            const badges = [];
-            if (isAdmin) badges.push('<span class="badge badge-admin"><i class="fas fa-shield-alt"></i>Admin</span>');
-            if (isVip) badges.push('<span class="badge badge-vip"><i class="fas fa-crown"></i>VIP</span>');
-            if (roles.includes('blog')) badges.push('<span class="badge badge-blog"><i class="fas fa-pen-nib"></i>Blog</span>');
-            if (link.customRole) badges.push(`<span class="badge badge-role">${escHtml(link.customRole)}</span>`);
-
-            html += `
-                <a href="${escHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="${cardClass.join(' ')}" role="listitem">
-                    <div class="link-icon" style="color:${escHtml(color)}"><i class="${escHtml(link.icon || 'fas fa-link')}"></i></div>
-                    <div class="link-text">${escHtml(link.title || 'Untitled')}</div>
-                    <div class="badge-group">${badges.join('')}</div>
-                </a>
-            `;
+        extractUniqueRoles().forEach(role => {
+            const a = document.createElement('a');
+            a.textContent = role.toUpperCase();
+            a.addEventListener('click', (e) => { e.preventDefault(); simulateRole(role); });
+            frag.appendChild(a);
         });
 
-        container.innerHTML = html;
+        DOM.simulateList.innerHTML = '';
+        DOM.simulateList.appendChild(frag);
     }
 
-    function renderAdminLinks() {
-        const el = DOM.adminTabLinks;
-        if (!el) return;
-        const items = state.allLinks || [];
-        if (!items.length) { el.innerHTML = '<p style="color:var(--text-muted)">No links available.</p>'; return; }
-        el.innerHTML = items.map(l => {
-            const roles = parseRoles(l.role || l.roles || 'public');
-            const sel = ['public','vip','admin','hidden'].map(r =>
-                `<option value="${r}" ${roles.includes(r)?'selected':''}>${r}</option>`
-            ).join('');
-            return `
-                <div class="admin-item">
-                    <div style="flex:1;min-width:0">
-                        <div class="admin-item-title">${escHtml(l.title||'Untitled')}</div>
-                        <div class="admin-item-subtitle">${escHtml(l.url||'')}</div>
-                    </div>
-                    <div style="display:flex;align-items:center;flex-shrink:0">
-                        <select class="admin-select" data-link-id="${escHtml(l.id||l.url)}" aria-label="Role for ${escHtml(l.title||'link')}">
-                            ${sel}
-                        </select>
-                        <button class="admin-btn-save" data-save-link="${escHtml(l.id||l.url)}" aria-label="Save changes">Save</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function renderAdminUsers() {
-        const el = DOM.adminTabUsers;
-        if (!el) return;
-        const users = state.allUsers || [];
-        if (!users.length) { el.innerHTML = '<p style="color:var(--text-muted)">No users found.</p>'; return; }
-        el.innerHTML = users.map(u => {
-            const roles = parseRoles(u.role || u.roles || 'public');
-            const sel = ['public','vip','admin','banned'].map(r =>
-                `<option value="${r}" ${roles.includes(r)?'selected':''}>${r}</option>`
-            ).join('');
-            return `
-                <div class="admin-item">
-                    <div style="flex:1;min-width:0">
-                        <div class="admin-item-title">${escHtml(u.name || u.email || 'Unknown')}</div>
-                        <div class="admin-item-subtitle">${escHtml(u.email||'')}</div>
-                    </div>
-                    <div style="display:flex;align-items:center;flex-shrink:0">
-                        <select class="admin-select" data-user-id="${escHtml(u.id || u.email)}" aria-label="Role for ${escHtml(u.name || 'user')}">
-                            ${sel}
-                        </select>
-                        <button class="admin-btn-save" data-save-user="${escHtml(u.id || u.email)}" aria-label="Save changes">Save</button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    // ════════════════════════════════════════════════════════════════
-    // § 6 · AUTH & SESSION
-    // ════════════════════════════════════════════════════════════════
-
-    function handleCredentialResponse(response) {
-        const token = response?.credential;
-        if (!token) { showToast('Google Sign-In failed', 'error'); return; }
-        const payload = decodeJwt(token);
-        if (!payload) { showToast('Invalid token', 'error'); return; }
-        state.idToken = token;
-        state.currentUser = payload;
-        state.isLoggedIn = true;
-        state.accessRoles = dedupe(['public', 'user', ...(payload.roles || [])]);
-        persistSession();
-        updateUserUI();
-        showToast('Signed in successfully', 'success');
-        closeAllModals();
-        loadData();
-    }
-
-    function persistSession() {
-        try {
-            sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-                idToken: state.idToken,
-                currentUser: state.currentUser,
-                isLoggedIn: state.isLoggedIn,
-                accessRoles: state.accessRoles
-            }));
-        } catch(e) {}
-    }
-
-    function restoreSession() {
-        try {
-            const raw = sessionStorage.getItem(SESSION_KEY);
-            if (!raw) return false;
-            const data = JSON.parse(raw);
-            if (data && data.isLoggedIn && data.idToken) {
-                state.idToken = data.idToken;
-                state.currentUser = data.currentUser;
-                state.isLoggedIn = true;
-                state.accessRoles = dedupe(['public', 'user', ...(data.currentUser?.roles || [])]);
-                return true;
-            }
-        } catch(e) {}
-        return false;
-    }
-
-    function clearSession() {
-        state.idToken = null;
-        state.currentUser = null;
-        state.isLoggedIn = false;
-        state.accessRoles = ['public'];
-        state.viewAsRole = null;
-        try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
-        updateUserUI();
-        loadData();
-        showToast('Signed out', 'success');
-    }
-
-    function updateUserUI() {
-        const u = state.currentUser;
-        const img = DOM.navProfileImg;
-        const name = DOM.profileName;
-        const bio = DOM.profileBio;
-        const mainImg = DOM.mainProfileImg;
-        const modalPic = $('modal-user-pic');
-        const modalName = $('modal-user-name');
-        const modalEmail = $('modal-user-email');
-        const badge = DOM.navUserBadge;
-        const roleBox = DOM.roleChipsBox;
-        const adminBtn = $('admin-panel-btn');
-
-        if (u) {
-            const pic = u.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=161616&color=86868b`;
-            if (img) img.src = pic;
-            if (mainImg) mainImg.src = pic;
-            if (modalPic) modalPic.src = pic;
-            if (name) name.textContent = u.name || 'User';
-            if (modalName) modalName.textContent = u.name || 'User';
-            if (modalEmail) modalEmail.textContent = u.email || '';
-            if (bio) bio.innerHTML = `Welcome back, <strong>${escHtml(u.name || 'User')}</strong>!<br>Enjoy your exclusive links.`;
-            if (badge) badge.classList.add('visible');
-
-            const roles = parseRoles(u.roles || []);
-            if (roleBox) {
-                roleBox.innerHTML = roles.map(r => {
-                    const color = r === 'admin' ? 'var(--accent-admin)' : r === 'vip' ? 'var(--accent-special)' : 'var(--accent)';
-                    return `<span class="role-chip" style="border:1px solid ${color}; color:${color}">${escHtml(r)}</span>`;
-                }).join('');
-            }
-            if (adminBtn) adminBtn.style.display = roles.includes('admin') ? 'block' : 'none';
-            if (DOM.simulateMenu) DOM.simulateMenu.style.display = roles.includes('admin') ? 'block' : 'none';
+    function simulateRole(role) {
+        state.viewAsRole = role;
+        if (role) {
+            DOM.viewAsText.textContent = `View As: ${role.toUpperCase()}`;
         } else {
-            const defaultPic = 'https://ui-avatars.com/api/?name=User&background=161616&color=86868b';
-            if (img) img.src = defaultPic;
-            if (mainImg) mainImg.src = defaultPic;
-            if (modalPic) modalPic.src = defaultPic;
-            if (name) name.textContent = 'Koo Mean';
-            if (modalName) modalName.textContent = 'Guest';
-            if (modalEmail) modalEmail.textContent = 'Not signed in';
-            if (bio) bio.innerHTML = 'Your personal hub for everything.<br>Sign in to unlock special links.';
-            if (badge) badge.classList.remove('visible');
-            if (roleBox) roleBox.innerHTML = '';
-            if (adminBtn) adminBtn.style.display = 'none';
-            if (DOM.simulateMenu) DOM.simulateMenu.style.display = 'none';
+            DOM.viewAsText.textContent = `View As: ADMIN`;
+        }
+        renderLinks(state.allLinks);
+        DOM.simulateList.classList.remove('show');
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // § 14 · AUTHENTICATION
+    // ════════════════════════════════════════════════════════════════
+
+    function handleCredentialResponse(res) {
+        const payload = decodeJwt(res.credential);
+        if (!payload) { toast('ไม่สามารถอ่านข้อมูลบัญชีได้', 'error', 'fas fa-exclamation-circle'); return; }
+
+        closeModal(DOM.loginModal);
+        state.pendingPayload = payload;
+        state.idToken = res.credential; 
+        setSystemStatus('api', 'checking');
+        
+        renderSkeleton('Verifying with Google…');
+        loadData(payload.email, payload.name, payload.picture, null, true);
+    }
+    window.handleCredentialResponse = handleCredentialResponse;
+
+    function submitNewRegistration() {
+        const note = DOM.newUserNote.value.trim() || '-';
+        closeModal(DOM.askNoteModal);
+        renderSkeleton('Registering…');
+        loadData(state.pendingPayload.email, state.pendingPayload.name, state.pendingPayload.picture, note, true);
+    }
+
+    function renderSkeleton(msg = 'Loading...') {
+        DOM.linksContainer.innerHTML = '<div class="loader"></div><div style="text-align:center;color:var(--text-muted);font-size:.9rem;">' + escHtml(msg) + '</div>';
+    }
+
+    function renderRoleChips(roles) {
+        const box = DOM.roleChipsBox;
+        if (!box) return;
+        box.innerHTML = '';
+        const unique = dedupe(roles.length ? roles : ['public']);
+        unique.forEach(role => {
+            const chip = document.createElement('span');
+            chip.className = 'role-chip ' + roleChipClass(role);
+            chip.innerHTML = `<i class="${roleChipIcon(role)}"></i> ${escHtml(role.toUpperCase())}`;
+            box.appendChild(chip);
+        });
+    }
+
+    function roleChipClass(role) {
+        if (role === 'admin') return 'badge-admin';
+        if (role === 'blog')  return 'badge-blog';
+        if (role === 'public') return 'badge-role';
+        return 'badge-vip';
+    }
+    function roleChipIcon(role) {
+        if (role === 'admin') return 'fas fa-shield-alt';
+        if (role === 'blog')  return 'fas fa-pen-fancy';
+        if (role === 'public') return 'fas fa-globe';
+        return 'fas fa-check-circle';
+    }
+
+    function handleProfileClick() {
+        if (!state.isLoggedIn || !state.currentUser) { openLogin(); return; }
+
+        const { pic, name, email, roles } = state.currentUser;
+        $('modal-user-pic').src           = pic || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || 'U');
+        $('modal-user-name').textContent  = name || '';
+        $('modal-user-email').textContent = email || '';
+
+        renderRoleChips(roles || ['public']);
+
+        const adminBtn = $('admin-panel-btn');
+        adminBtn.style.display = roles.includes('admin') ? 'block' : 'none';
+
+        openModal(DOM.userProfModal);
+    }
+
+    function logout(silent = false) {
+        closeModal(DOM.userProfModal);
+        clearSession();
+        Object.assign(state, {
+            isLoggedIn   : false,
+            idToken      : null,
+            currentUser  : null,
+            accessRoles  : ['public'],
+            viewAsRole   : null,
+            allUsers     : [],
+            pendingPayload: null,
+        });
+        DOM.unlockBtn.className = 'unlock-btn';
+        DOM.unlockBtn.innerHTML = '<i class="fas fa-lock"></i>';
+        DOM.navUserBadge.classList.remove('visible');
+        buildSimulateMenu();
+        renderLinks(state.allLinks);
+        updateNavbarImage();
+        
+        if (!silent) {
+            toast('ออกจากระบบแล้ว', '', 'fas fa-sign-out-alt');
         }
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 7 · CLOCK & STATUS
+    // § 15 · DATA LOADING
     // ════════════════════════════════════════════════════════════════
 
-    function updateClock() {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        if (DOM.navClock) DOM.navClock.textContent = `${h}:${m}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    async function checkStatus() {
-        if (DOM.navStatusDot) DOM.navStatusDot.className = 'status-dot checking';
-        if (DOM.navStatusText) DOM.navStatusText.textContent = 'Checking...';
-        if (DOM.badgeApi) DOM.badgeApi.className = 'status-badge status-checking';
-        if (DOM.badgeMedia) DOM.badgeMedia.className = 'status-badge status-checking';
-
-        let apiOk = false;
+    async function loadData(userEmail = '', userName = '', userPic = '', userNote = null, isFreshLogin = false) {
         try {
-            const res = await fetchWithTimeout(`${API_URL}?action=ping`, {}, 8000);
-            apiOk = res.ok;
-        } catch(e) {}
+            let url = API_URL;
+            let queryParams = [
+                `action=${userNote !== null ? 'register' : 'bootstrap'}`
+            ];
 
-        const apiStatus = apiOk ? 'ok' : 'error';
-        const mediaStatus = 'ok'; // Assume media ok if page loaded
+            if (state.idToken) {
+                queryParams.push(`idToken=${encodeURIComponent(state.idToken)}`);
+            }
 
-        state.sysStatus = { api: apiStatus, media: mediaStatus };
+            if (userEmail) {
+                queryParams.push(`email=${encodeURIComponent(userEmail)}`);
+                queryParams.push(`name=${encodeURIComponent(userName)}`);
+                if (userNote !== null) {
+                    queryParams.push(`note=${encodeURIComponent(userNote)}`);
+                }
+            }
 
-        if (DOM.navStatusDot) DOM.navStatusDot.className = `status-dot ${apiStatus}`;
-        if (DOM.navStatusText) DOM.navStatusText.textContent = apiOk ? 'Online' : 'Error';
-        if (DOM.badgeApi) DOM.badgeApi.className = `status-badge status-${apiStatus}`;
-        if (DOM.badgeApi) DOM.badgeApi.textContent = apiOk ? 'Operational' : 'Error';
-        if (DOM.badgeMedia) DOM.badgeMedia.className = 'status-badge status-ok';
-        if (DOM.badgeMedia) DOM.badgeMedia.textContent = 'Operational';
-    }
+            if (queryParams.length > 0) {
+                url += '?' + queryParams.join('&');
+            }
 
-    // ════════════════════════════════════════════════════════════════
-    // § 8 · DATA LOADING
-    // ════════════════════════════════════════════════════════════════
+            const data = await robustFetch(url);
 
-    async function loadData() {
-        try {
-            const [linksRes, usersRes, aboutRes] = await Promise.all([
-                apiGet('getLinks').catch(() => null),
-                apiGet('getUsers').catch(() => null),
-                apiGet('getAbout').catch(() => null)
-            ]);
+            setSystemStatus('api',   'ok');
+            setSystemStatus('media', 'ok');
 
-            if (linksRes && linksRes.links) {
-                state.allLinks = linksRes.links;
+            if (data.authError) {
+                if (isFreshLogin) {
+                    logout(true);
+                    hideGlobalLoader();
+                    toast('ยืนยันตัวตนไม่ผ่าน กรุณาลองใหม่', 'error', 'fas fa-times');
+                } else {
+                    logout(true); 
+                    loadData(); 
+                }
+                return;
+            }
+
+            if (data.requireRegistration) {
                 renderLinks(state.allLinks);
+                hideGlobalLoader();
+                openModal(DOM.askNoteModal);
+                return;
             }
-            if (usersRes && usersRes.users) {
-                state.allUsers = usersRes.users;
+
+            if (userEmail && data.user) {
+                const roles = parseRoles(data.user.role);
+                if (!roles.length) roles.push('public');
+
+                state.isLoggedIn  = true;
+                state.accessRoles = roles;
+                state.currentUser = {
+                    email: data.user.email,
+                    name : userName || data.user.name || '',
+                    pic  : userPic,
+                    roles: roles,
+                };
+
+                saveSession(userEmail, userName, userPic, state.idToken);
+
+                DOM.unlockBtn.classList.add('active');
+                DOM.unlockBtn.innerHTML = '<i class="fas fa-unlock"></i>';
+                if (roles.includes('admin')) {
+                    DOM.unlockBtn.classList.add('admin-mode');
+                    DOM.navUserBadge.classList.add('visible');
+                    DOM.navUserBadge.style.background = 'var(--accent-admin)';
+                } else {
+                    DOM.unlockBtn.classList.remove('admin-mode');
+                    DOM.navUserBadge.classList.add('visible');
+                    DOM.navUserBadge.style.background = 'var(--accent-special)';
+                }
+
+                state.viewAsRole = null;
+                DOM.viewAsText.textContent = `View As: ${roles.includes('admin') ? 'ADMIN' : roles[0].toUpperCase()}`;
+                
+                if (isFreshLogin) toast(`ยินดีต้อนรับ, ${userName.split(' ')[0]}`, 'success', 'fas fa-check-circle');
             }
-            if (aboutRes && aboutRes.text) {
-                state.aboutText = aboutRes.text;
-                if (DOM.modalText) DOM.modalText.textContent = aboutRes.text;
+
+            if (data.profile) {
+                DOM.profileName.textContent = data.profile.name || 'My Portfolio';
+                DOM.profileBio.textContent  = data.profile.bio  || '';
+                if (data.profile.imageUrl) {
+                    DOM.mainProfileImg.src = data.profile.imageUrl;
+                }
+                state.aboutText = data.profile.aboutText || '';
+
+                if (data.profile.videoUrl) {
+                    const m = data.profile.videoUrl.match(/(?:youtu\.be\/|(?:v|embed|watch\?v)=|&v=)([A-Za-z0-9_-]{11})/);
+                    if (m) {
+                        DOM.youtubeIframe.src           = `https://www.youtube.com/embed/${m[1]}`;
+                        DOM.featuredVideo.style.display = 'block';
+                    }
+                }
             }
+
+            const appsFrag = document.createDocumentFragment();
+            if (data.apps?.length) {
+                data.apps.forEach(app => {
+                    if (!isSafeUrl(app.url)) return;
+                    const a = document.createElement('a');
+                    a.href        = app.url;
+                    a.target      = '_blank';
+                    a.rel         = 'noopener noreferrer';
+                    a.textContent = app.name;
+                    appsFrag.appendChild(a);
+                });
+            } else {
+                const placeholder = document.createElement('a');
+                placeholder.href          = '#';
+                placeholder.style.cssText = 'color:var(--text-muted);padding-left:20px;cursor:default;';
+                placeholder.textContent   = 'No Apps';
+                appsFrag.appendChild(placeholder);
+            }
+            DOM.appsDropdown.innerHTML = '';
+            DOM.appsDropdown.appendChild(appsFrag);
+
+            if (data.links)    state.allLinks = data.links;
+            if (data.allUsers) state.allUsers = data.allUsers;
+
+            buildSimulateMenu();
+            renderLinks(state.allLinks);
+            hideGlobalLoader();
+
         } catch (err) {
-            console.error('Load data error:', err);
-            showToast('Failed to load data', 'error');
-        } finally {
+            if (err.message === 'superseded') return; 
+            console.error('loadData error:', err);
+            setSystemStatus('api',   'error');
+            setSystemStatus('media', 'error');
+            DOM.linksContainer.innerHTML = `
+                <div style="text-align:center;background:rgba(255,59,48,.08);border:1px solid rgba(255,59,48,.25);padding:26px 20px;border-radius:20px;color:var(--accent-danger);margin-top:10px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:12px;"></i>
+                    <h3 style="margin-bottom:8px;">Connection Failed</h3>
+                    <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:14px;">ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้</p>
+                    <button onclick="location.reload()" style="background:var(--accent-danger);color:#fff;border:none;padding:9px 22px;border-radius:99px;font-weight:700;cursor:pointer;font-family:inherit;">
+                        <i class="fas fa-rotate-right"></i> ลองใหม่
+                    </button>
+                </div>`;
             hideGlobalLoader();
         }
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 9 · EVENT HANDLERS
+    // § 16 · LINK RENDER HELPERS
     // ════════════════════════════════════════════════════════════════
 
-    function closeAllModals() {
-        document.querySelectorAll('.modal').forEach(m => closeModal(m));
+    function createGroupDivider(text, isStarredSection = false) {
+        const div = document.createElement('div');
+        div.className = 'group-divider fade-in' + (isStarredSection ? ' starred-divider' : '');
+        div.textContent = text;
+        return div;
     }
 
-    function setupEventListeners() {
-        // Escape closes top modal
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const openModal = document.querySelector('.modal.show');
-                if (openModal) closeModal(openModal);
+    async function toggleStarInline(linkTitle, btnEl) {
+        const idx = state.allLinks.findIndex(l => l.title === linkTitle);
+        if (idx === -1) return;
+
+        const link       = state.allLinks[idx];
+        const newStarred = !link.starred;
+
+        state.allLinks[idx] = { ...link, starred: newStarred };
+        btnEl.classList.toggle('starred', newStarred);
+        btnEl.innerHTML = `<i class="${newStarred ? 'fas' : 'far'} fa-star"></i>`;
+        btnEl.classList.add('saving');
+
+        renderLinks(state.allLinks);
+
+        try {
+            const result = await postData('updateLink', {
+                title: link.title,
+                url: link.group || 'public',
+                starred: newStarred
+            });
+            
+            if (!result.success) throw new Error(result.message || 'Save failed');
+            toast(newStarred ? 'Pinned!' : 'Unpinned', 'success', 'fas fa-star');
+        } catch (err) {
+            state.allLinks[idx] = { ...link, starred: !newStarred };
+            renderLinks(state.allLinks);
+            toast('บันทึกไม่สำเร็จ: ' + err.message, 'error', 'fas fa-exclamation-circle');
+            console.error('toggleStarInline error:', err);
+        } finally {
+            btnEl.classList.remove('saving');
+        }
+    }
+
+    function makeBadgePill(role) {
+        const badge = document.createElement('span');
+        const icon  = document.createElement('i');
+        badge.className = 'badge ' + roleChipClass(role);
+        icon.className  = roleChipIcon(role);
+        badge.appendChild(icon);
+        badge.appendChild(document.createTextNode(role.toUpperCase()));
+        return badge;
+    }
+
+    function createLinkCard(link) {
+        if (!isSafeUrl(link.url)) return null;
+
+        const isAdmin  = userIsAdmin();
+        const isSpecial = isSpecialLink(link);
+        const linkGroups = parseRoles(link.group || 'public');
+        const eff = effectiveRoles();
+
+        const card     = document.createElement('a');
+        card.href      = link.url;
+        card.target    = '_blank';
+        card.rel       = 'noopener noreferrer';
+
+        let cardClass = 'link-card fade-in';
+        if (link.starred) cardClass += ' starred-card';
+        if (isSpecial) {
+            cardClass += (eff.includes('admin') && linkGroups.includes('admin')) ? ' admin-access' : ' special-access';
+        }
+        card.className = cardClass;
+
+        const iconWrap     = document.createElement('div');
+        iconWrap.className = 'link-icon';
+        const icon         = document.createElement('i');
+        icon.className     = link.icon || 'fas fa-link';
+        icon.style.color   = getIconColor(link.icon);
+        iconWrap.appendChild(icon);
+
+        const titleEl       = document.createElement('div');
+        titleEl.className   = 'link-text';
+        titleEl.textContent = link.title;
+
+        card.appendChild(iconWrap);
+        card.appendChild(titleEl);
+
+        if (isSpecial) {
+            const matching = linkGroups.filter(g => g !== 'public' && eff.includes(g));
+            const toDisplay = matching.length ? matching : linkGroups.filter(g => g !== 'public');
+            const group = document.createElement('div');
+            group.className = 'badge-group';
+            toDisplay.slice(0, 2).forEach(role => group.appendChild(makeBadgePill(role)));
+            if (toDisplay.length > 2) {
+                const more = document.createElement('span');
+                more.className = 'badge badge-role';
+                more.textContent = `+${toDisplay.length - 2}`;
+                group.appendChild(more);
             }
-        });
+            card.appendChild(group);
+        }
 
-        // Click outside modal content closes modal
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal(modal);
-            });
-        });
-
-        // Dropdown toggles
-        const appsDrop = $('apps-dropbtn');
-        if (appsDrop) {
-            appsDrop.addEventListener('click', (e) => {
+        if (isAdmin) {
+            const starBtn       = document.createElement('button');
+            starBtn.className   = 'card-star-btn' + (link.starred ? ' starred' : '');
+            starBtn.title       = link.starred ? 'เอาออกจาก Pinned' : 'ปักหมุด (Pin)';
+            starBtn.innerHTML   = `<i class="${link.starred ? 'fas' : 'far'} fa-star"></i>`;
+            starBtn.style.marginLeft = isSpecial ? '8px' : 'auto';
+            starBtn.addEventListener('click', (e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                const menu = DOM.appsDropdown;
-                const isOpen = menu?.classList.contains('show');
-                // Close others
-                document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-                if (menu && !isOpen) menu.classList.add('show');
+                toggleStarInline(link.title, starBtn);
+            });
+            card.appendChild(starBtn);
+        } else if (link.starred && !isSpecial) {
+            const starIcon         = document.createElement('i');
+            starIcon.className     = 'fas fa-star';
+            starIcon.style.cssText = 'color:#ffcc00;margin-left:auto;padding-left:10px;font-size:.9rem;filter:drop-shadow(0 0 5px rgba(255,204,0,.5));flex-shrink:0;';
+            card.appendChild(starIcon);
+        }
+
+        return card;
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // § 17 · RENDER LINKS
+    // ════════════════════════════════════════════════════════════════
+
+    function renderLinks(linksData) {
+        if (!linksData?.length) {
+            DOM.linksContainer.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:30px 0;">No links found</p>';
+            updateNavbarImage();
+            return;
+        }
+
+        const visible = linksData.filter(hasAccessToLink);
+
+        if (!visible.length) {
+            DOM.linksContainer.innerHTML = `
+                <div style="text-align:center;color:var(--text-muted);padding:40px 20px;">
+                    <i class="fas fa-lock" style="font-size:2rem;opacity:.3;margin-bottom:12px;"></i>
+                    <p>ไม่พบลิงก์ที่คุณมีสิทธิ์เข้าถึง</p>
+                </div>`;
+            updateNavbarImage();
+            return;
+        }
+
+        const starredLinks = visible.filter(l => l.starred === true);
+        const unstarred    = visible.filter(l => l.starred !== true);
+        const specialLinks = unstarred.filter(isSpecialLink);
+        const publicLinks  = unstarred.filter(l => !isSpecialLink(l));
+
+        const frag = document.createDocumentFragment();
+
+        if (starredLinks.length) {
+            frag.appendChild(createGroupDivider('⭐ Pinned', true));
+            starredLinks.forEach(l => {
+                const card = createLinkCard(l);
+                if (card) frag.appendChild(card);
             });
         }
 
-        const simDrop = $('simulate-dropbtn');
-        if (simDrop) {
-            simDrop.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const menu = DOM.simulateList;
-                const isOpen = menu?.classList.contains('show');
-                document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-                if (menu && !isOpen) menu.classList.add('show');
+        if (specialLinks.length) {
+            const eff = effectiveRoles();
+            const label = eff.includes('admin') && !state.viewAsRole
+                ? 'ADMIN ACCESS (ALL LINKS)'
+                : `Unlocked: ${eff.filter(r => r !== 'public').map(r => r.toUpperCase()).join(' · ') || state.accessRoles.join(', ').toUpperCase()}`;
+            const div = createGroupDivider(label);
+            if (starredLinks.length) div.style.marginTop = '30px';
+            frag.appendChild(div);
+            specialLinks.forEach(l => {
+                const card = createLinkCard(l);
+                if (card) frag.appendChild(card);
             });
         }
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
-        });
-
-        // About
-        if ($('about-btn')) $('about-btn').addEventListener('click', () => openModal(DOM.aboutModal));
-        if ($('close-about-btn')) $('close-about-btn').addEventListener('click', () => closeModal(DOM.aboutModal));
-
-        // Status
-        if ($('status-btn')) $('status-btn').addEventListener('click', () => openModal(DOM.statusModal));
-        if ($('close-status-btn')) $('close-status-btn').addEventListener('click', () => closeModal(DOM.statusModal));
-
-        // Profile
-        if ($('profile-btn')) $('profile-btn').addEventListener('click', () => {
-            if (state.isLoggedIn) openModal(DOM.userProfModal);
-            else openModal(DOM.loginModal);
-        });
-        if ($('close-profile-btn')) $('close-profile-btn').addEventListener('click', () => closeModal(DOM.userProfModal));
-        if ($('logout-btn')) $('logout-btn').addEventListener('click', () => { clearSession(); closeModal(DOM.userProfModal); });
-        if ($('open-admin-btn')) $('open-admin-btn').addEventListener('click', () => {
-            closeModal(DOM.userProfModal);
-            openModal(DOM.adminDashModal);
-            renderAdminLinks();
-            renderAdminUsers();
-        });
-
-        // Login modal
-        if ($('close-login-btn')) $('close-login-btn').addEventListener('click', () => closeModal(DOM.loginModal));
-        if ($('open-login-from-code-btn')) $('open-login-from-code-btn').addEventListener('click', () => {
-            closeModal(DOM.codeUnlockModal);
-            openModal(DOM.loginModal);
-        });
-
-        // Code unlock modal
-        if ($('unlockBtn')) $('unlockBtn').addEventListener('click', () => openModal(DOM.codeUnlockModal));
-        if ($('close-code-unlock-btn')) $('close-code-unlock-btn').addEventListener('click', () => closeModal(DOM.codeUnlockModal));
-        if ($('submit-code-unlock-btn')) $('submit-code-unlock-btn').addEventListener('click', handleCodeUnlock);
-
-        // Admin dashboard
-        if ($('close-admin-btn')) $('close-admin-btn').addEventListener('click', () => closeModal(DOM.adminDashModal));
-        if ($('tab-btn-links')) $('tab-btn-links').addEventListener('click', () => switchAdminTab('links'));
-        if ($('tab-btn-users')) $('tab-btn-users').addEventListener('click', () => switchAdminTab('users'));
-
-        // Search
-        if (DOM.searchInput) {
-            DOM.searchInput.addEventListener('input', debounce(() => {
-                if (DOM.searchClear) DOM.searchClear.classList.toggle('visible', !!DOM.searchInput.value);
-                renderLinks(state.allLinks);
-            }, 250));
-        }
-        if (DOM.searchClear) {
-            DOM.searchClear.addEventListener('click', () => {
-                DOM.searchInput.value = '';
-                DOM.searchClear.classList.remove('visible');
-                renderLinks(state.allLinks);
-                DOM.searchInput.focus();
+        if (publicLinks.length) {
+            if (starredLinks.length || specialLinks.length) {
+                const div = createGroupDivider('Public Links');
+                div.style.marginTop = '30px';
+                frag.appendChild(div);
+            }
+            publicLinks.forEach(l => {
+                const card = createLinkCard(l);
+                if (card) frag.appendChild(card);
             });
         }
 
-        // Note modal
-        if ($('close-note-btn')) $('close-note-btn').addEventListener('click', () => closeModal(DOM.askNoteModal));
-        if ($('submit-note-btn')) $('submit-note-btn').addEventListener('click', submitNewUserNote);
+        DOM.linksContainer.innerHTML = '';
+        DOM.linksContainer.appendChild(frag);
+
+        DOM.linksContainer.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+        updateNavbarImage();
+    }
+
+    function updateNavbarImage() {
+        const img = DOM.navProfileImg;
+        if (state.isLoggedIn && state.currentUser?.pic) {
+            img.src                = state.currentUser.pic;
+            const isAdm            = userIsAdmin();
+            img.style.borderColor  = isAdm ? 'var(--accent-admin)' : 'var(--accent-special)';
+            img.style.boxShadow    = isAdm
+                ? '0 0 15px rgba(52,199,89,.4)'
+                : '0 0 15px rgba(255,159,10,.4)';
+        } else {
+            img.src                = DOM.mainProfileImg.src || 'https://ui-avatars.com/api/?name=User';
+            img.style.borderColor  = 'rgba(255,255,255,.1)';
+            img.style.boxShadow    = 'none';
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // § 18 · ADMIN DASHBOARD
+    // ════════════════════════════════════════════════════════════════
+
+    function openAdminDashboard() {
+        closeModal(DOM.userProfModal);
+        renderAdminLinks();
+        renderAdminUsers();
+        openModal(DOM.adminDashModal);
     }
 
     function switchAdminTab(tab) {
-        const btnLinks = $('tab-btn-links');
-        const btnUsers = $('tab-btn-users');
-        const elLinks = DOM.adminTabLinks;
-        const elUsers = DOM.adminTabUsers;
-        if (tab === 'links') {
-            btnLinks?.classList.add('active'); btnLinks?.setAttribute('aria-selected', 'true');
-            btnUsers?.classList.remove('active'); btnUsers?.setAttribute('aria-selected', 'false');
-            if (elLinks) elLinks.style.display = 'block';
-            if (elUsers) elUsers.style.display = 'none';
-            renderAdminLinks();
-        } else {
-            btnUsers?.classList.add('active'); btnUsers?.setAttribute('aria-selected', 'true');
-            btnLinks?.classList.remove('active'); btnLinks?.setAttribute('aria-selected', 'false');
-            if (elLinks) elLinks.style.display = 'none';
-            if (elUsers) elUsers.style.display = 'block';
-            renderAdminUsers();
-        }
+        ['links', 'users'].forEach(t => {
+            $(`tab-btn-${t}`).classList.toggle('active', t === tab);
+            $(`admin-tab-${t}`).style.display = t === tab ? 'block' : 'none';
+        });
     }
 
-    async function handleCodeUnlock() {
-        const input = DOM.linkAccessCode;
-        const results = DOM.codeUnlockResults;
-        if (!input || !results) return;
-        const code = input.value.trim();
-        if (!code) { showToast('Please enter access code', 'error'); return; }
+    function renderAdminLinks() {
+        const frag = document.createDocumentFragment();
+
+        if (!state.allLinks.length) {
+            DOM.adminTabLinks.innerHTML = '<p style="text-align:center;color:var(--text-muted);margin-top:20px;">No links found</p>';
+            return;
+        }
+
+        state.allLinks.forEach(link => {
+            const item     = document.createElement('div');
+            item.className = 'admin-item';
+
+            const info       = document.createElement('div');
+            info.style.width = '45%';
+            info.style.minWidth = '0';
+
+            const titleEl       = document.createElement('div');
+            titleEl.className   = 'admin-item-title';
+            titleEl.textContent = link.title;
+
+            const subEl     = document.createElement('div');
+            subEl.className = 'admin-item-subtitle';
+            subEl.innerHTML = `<i class="fas fa-link"></i> ${escHtml(isSafeUrl(link.url) ? (link.url.length > 28 ? link.url.substring(0, 28) + '…' : link.url) : '(invalid)')}`;
+
+            info.append(titleEl, subEl);
+
+            const controls         = document.createElement('div');
+            controls.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
+            const starBtn       = document.createElement('button');
+            starBtn.className   = 'star-btn';
+            starBtn.title       = 'กดเพื่อ Pin / Unpin (บันทึกทันที)';
+            starBtn.style.color = link.starred ? '#ffcc00' : 'rgba(255,255,255,0.25)';
+            starBtn.innerHTML   = `<i class="${link.starred ? 'fas' : 'far'} fa-star"></i>`;
+            starBtn.addEventListener('click', () => {
+                toggleStarInline(link.title, starBtn);
+                setTimeout(() => renderAdminLinks(), 300);
+            });
+
+            const input       = document.createElement('input');
+            input.type        = 'text';
+            input.className   = 'admin-select';
+            input.style.width = '110px';
+            input.placeholder = 'e.g. vip,student';
+            input.value       = link.group || 'public';
+            input.title       = 'ใช้ลูกน้ำ (,) คั่นเพื่อใส่หลาย Role เช่น vip,student';
+
+            const saveBtn       = document.createElement('button');
+            saveBtn.className   = 'admin-btn-save';
+            saveBtn.textContent = 'Save';
+            saveBtn.addEventListener('click', () => {
+                const currentLink   = state.allLinks.find(l => l.title === link.title);
+                const currentStar   = currentLink ? currentLink.starred === true : false;
+                const normalizedGroup = parseRoles(input.value).join(',') || 'public';
+                input.value = normalizedGroup;
+                updateAdminData('updateLink', link.title, normalizedGroup, currentStar, saveBtn);
+            });
+
+            controls.append(starBtn, input, saveBtn);
+            item.append(info, controls);
+            frag.appendChild(item);
+        });
+
+        DOM.adminTabLinks.innerHTML = '';
+        DOM.adminTabLinks.appendChild(frag);
+    }
+
+    function renderAdminUsers() {
+        if (!state.allUsers.length) {
+            DOM.adminTabUsers.innerHTML = '<p style="text-align:center;color:var(--text-muted);margin-top:20px;">No users found</p>';
+            return;
+        }
+
+        const frag  = document.createDocumentFragment();
+
+        state.allUsers.forEach(user => {
+            const item     = document.createElement('div');
+            item.className = 'admin-item';
+
+            const info        = document.createElement('div');
+            info.style.width  = '55%';
+            info.style.minWidth = '0';
+
+            const nameEl       = document.createElement('div');
+            nameEl.className   = 'admin-item-title';
+            nameEl.textContent = user.name || '(unknown)';
+
+            const subEl     = document.createElement('div');
+            subEl.className = 'admin-item-subtitle';
+
+            const emailText = document.createTextNode(user.email || '');
+            const br        = document.createElement('br');
+            const noteSpan  = document.createElement('span');
+            noteSpan.style.cssText = 'color:var(--accent-special);font-style:italic;font-size:.75rem;';
+            noteSpan.textContent   = `📝 ${user.note || '-'}`;
+            subEl.append(emailText, br, noteSpan);
+            info.append(nameEl, subEl);
+
+            const controls         = document.createElement('div');
+            controls.style.cssText = 'display:flex;align-items:center;';
+
+            const input       = document.createElement('input');
+            input.type        = 'text';
+            input.className   = 'admin-select';
+            input.style.width = '110px';
+            input.placeholder = 'admin,blog';
+            input.value       = user.role || 'public';
+            input.title       = 'ใช้ลูกน้ำ (,) คั่นหลาย Role เช่น admin,blog';
+
+            const saveBtn       = document.createElement('button');
+            saveBtn.className   = 'admin-btn-save';
+            saveBtn.textContent = 'Save';
+            saveBtn.addEventListener('click', () => {
+                const normalized = parseRoles(input.value).join(',') || 'public';
+                input.value = normalized;
+                if (!normalized) { toast('กรุณากรอก Role', 'error'); return; }
+                updateAdminData('updateRole', user.email, normalized, null, saveBtn);
+            });
+
+            controls.append(input, saveBtn);
+            item.append(info, controls);
+            frag.appendChild(item);
+        });
+
+        DOM.adminTabUsers.innerHTML = '';
+        DOM.adminTabUsers.appendChild(frag);
+    }
+
+    async function updateAdminData(action, param1, param2, starredValue, saveBtn) {
+        const original      = saveBtn.textContent;
+        saveBtn.textContent = '…';
+        saveBtn.disabled    = true;
+
         try {
-            const res = await apiPost('unlockByCode', { code });
-            if (res.success && res.links?.length) {
-                results.style.display = 'block';
-                results.innerHTML = res.links.map(l => `
-                    <a href="${escHtml(l.url)}" target="_blank" rel="noopener noreferrer" class="link-card" style="margin-bottom:8px">
-                        <div class="link-icon"><i class="${escHtml(l.icon || 'fas fa-link')}"></i></div>
-                        <div class="link-text">${escHtml(l.title || 'Untitled')}</div>
-                    </a>
-                `).join('');
-                showToast('Links unlocked!', 'success');
-            } else {
-                showToast('Invalid code or no links found', 'error');
+            let params = {};
+            if (action === 'updateRole') {
+                params = { targetEmail: param1, newRole: param2 };
+            } else if (action === 'updateLink') {
+                params = { title: param1, url: param2, starred: starredValue === true };
             }
-        } catch (e) {
-            showToast('Failed to unlock', 'error');
+
+            const result = await postData(action, params);
+            if (!result.success) throw new Error(result.message || 'Unknown error');
+
+            saveBtn.textContent      = '✔';
+            saveBtn.style.background = 'var(--accent-admin)';
+            toast('บันทึกสำเร็จ', 'success', 'fas fa-check');
+
+            setTimeout(() => {
+                saveBtn.textContent      = original;
+                saveBtn.style.background = 'var(--accent)';
+                saveBtn.disabled         = false;
+                loadData(
+                    state.currentUser.email,
+                    state.currentUser.name,
+                    state.currentUser.pic
+                );
+            }, 1200);
+
+        } catch (err) {
+            toast('Error: ' + (err.message || 'Unknown'), 'error', 'fas fa-exclamation-circle');
+            saveBtn.textContent      = 'Failed';
+            saveBtn.style.background = 'var(--accent-danger)';
+            setTimeout(() => {
+                saveBtn.textContent      = original;
+                saveBtn.style.background = 'var(--accent)';
+                saveBtn.disabled         = false;
+            }, 2000);
         }
     }
 
-    async function submitNewUserNote() {
-        const note = DOM.newUserNote?.value.trim();
-        if (!note) { showToast('Please enter a note', 'error'); return; }
+    // ════════════════════════════════════════════════════════════════
+    // § 19 · PUBLIC CODE UNLOCK
+    // ════════════════════════════════════════════════════════════════
+
+    function resetCodeUnlockResults() {
+        if (!DOM.codeUnlockResults) return;
+        DOM.codeUnlockResults.innerHTML = '';
+        DOM.codeUnlockResults.style.display = 'none';
+    }
+
+    function openCodeUnlock() {
+        DOM.linkAccessCode.value = '';
+        resetCodeUnlockResults();
+        openModal(DOM.codeUnlockModal);
+        setTimeout(() => DOM.linkAccessCode.focus(), 120);
+    }
+
+    function openUnlockedLink(link) {
+        if (!link || !isSafeUrl(link.url)) {
+            toast('URL ไม่ถูกต้อง', 'error', 'fas fa-times-circle');
+            return;
+        }
+
+        closeModal(DOM.codeUnlockModal);
+        DOM.linkAccessCode.value = '';
+        resetCodeUnlockResults();
+        toast('เปิดลิงก์: ' + (link.title || 'Unlocked'), 'success', 'fas fa-unlock');
+
+        const opened = window.open(link.url, '_blank', 'noopener,noreferrer');
+        if (!opened) {
+            window.location.href = link.url;
+        }
+    }
+
+    function renderUnlockChoices(links) {
+        const box = DOM.codeUnlockResults;
+        if (!box) return;
+
+        box.innerHTML = '';
+        box.style.display = 'block';
+
+        const header = document.createElement('div');
+        header.style.cssText = 'color: var(--text-main); font-weight: 700; margin-bottom: 10px; text-align: center;';
+        header.textContent = `พบ ${links.length} ลิงก์ เลือกอันที่ต้องการเปิด`;
+        box.appendChild(header);
+
+        links.forEach((link) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.style.cssText = 'width:100%; display:flex; align-items:center; gap:12px; text-align:left; padding:13px 14px; margin-bottom:9px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:var(--text-main); cursor:pointer; font-family:inherit; transition:.2s;';
+
+            const icon = document.createElement('i');
+            icon.className = link.icon || 'fas fa-link';
+            icon.style.cssText = 'width:22px; text-align:center; color:var(--accent-special); flex-shrink:0;';
+
+            const textWrap = document.createElement('div');
+            textWrap.style.cssText = 'min-width:0; flex:1;';
+
+            const title = document.createElement('div');
+            title.style.cssText = 'font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+            title.textContent = link.title || 'Untitled Link';
+
+            const url = document.createElement('div');
+            url.style.cssText = 'font-size:.78rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px;';
+            url.textContent = link.url || '';
+
+            textWrap.append(title, url);
+            item.append(icon, textWrap);
+
+            item.addEventListener('mouseenter', () => {
+                item.style.background = 'rgba(255,255,255,0.1)';
+                item.style.transform = 'translateY(-2px)';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.style.background = 'rgba(255,255,255,0.05)';
+                item.style.transform = 'translateY(0)';
+            });
+            item.addEventListener('click', () => openUnlockedLink(link));
+
+            box.appendChild(item);
+        });
+    }
+
+    async function unlockByCode() {
+        const code = DOM.linkAccessCode.value.trim();
+
+        if (!code) {
+            toast('กรุณากรอกรหัส', 'error', 'fas fa-key');
+            DOM.linkAccessCode.focus();
+            return;
+        }
+
+        const btn = $('submit-code-unlock-btn');
+        const oldHtml = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+        resetCodeUnlockResults();
+
+        const popup = window.open('', '_blank');
+
         try {
-            await apiPost('newUserNote', { note, email: state.currentUser?.email, name: state.currentUser?.name });
-            showToast('Note sent to admin', 'success');
-            closeModal(DOM.askNoteModal);
-        } catch (e) {
-            showToast('Failed to send note', 'error');
+            const formData = new URLSearchParams();
+            formData.append('action', 'unlockByCode');
+            formData.append('code', code);
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            });
+
+            let result = null;
+            try {
+                result = await res.json();
+            } catch (_) {
+                throw new Error('Server response ไม่ถูกต้อง');
+            }
+
+            const links = Array.isArray(result.matches)
+                ? result.matches.filter(link => link && isSafeUrl(link.url))
+                : (isSafeUrl(result.url) ? [{ title: result.title, url: result.url, icon: result.icon }] : []);
+
+            if (!result.success || !links.length) {
+                throw new Error(result.message || 'รหัสไม่ถูกต้อง');
+            }
+
+            if (links.length === 1) {
+                closeModal(DOM.codeUnlockModal);
+                DOM.linkAccessCode.value = '';
+                resetCodeUnlockResults();
+                toast('เปิดลิงก์: ' + (links[0].title || 'Unlocked'), 'success', 'fas fa-unlock');
+
+                if (popup) {
+                    popup.location.href = links[0].url;
+                } else {
+                    window.location.href = links[0].url;
+                }
+                return;
+            }
+
+            if (popup) popup.close();
+            renderUnlockChoices(links);
+            toast(`พบ ${links.length} ลิงก์ เลือกอันที่ต้องการเปิด`, 'success', 'fas fa-list');
+
+        } catch (err) {
+            if (popup) popup.close();
+            toast(err.message || 'ปลดล็อกไม่สำเร็จ', 'error', 'fas fa-times-circle');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = oldHtml;
         }
     }
 
     // ════════════════════════════════════════════════════════════════
-    // § 10 · INIT
+    // § 20 · EVENT WIRING
     // ════════════════════════════════════════════════════════════════
 
-    function init() {
-        restoreSession();
-        updateUserUI();
-        setupEventListeners();
-        loadData();
-        checkStatus();
-        setInterval(checkStatus, 60000);
+    $('apps-dropbtn').addEventListener('click', () =>
+        toggleDropdown('apps-dropdown-list', ['simulate-dropdown-list']));
+    $('simulate-dropbtn').addEventListener('click', () =>
+        toggleDropdown('simulate-dropdown-list', ['apps-dropdown-list']));
+    $('about-btn').addEventListener('click', openAbout);
+    $('status-btn').addEventListener('click', openStatus);
+    $('profile-btn').addEventListener('click', handleProfileClick);
+    DOM.unlockBtn.addEventListener('click', openCodeUnlock);
 
-        // Fade in animations
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-        }, { threshold: 0.1 });
-        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-    }
+    $('close-about-btn').addEventListener('click',   () => closeModal(DOM.aboutModal));
+    $('close-status-btn').addEventListener('click',  () => closeModal(DOM.statusModal));
+    $('close-login-btn').addEventListener('click',   () => closeModal(DOM.loginModal));
+    $('close-code-unlock-btn').addEventListener('click', () => {
+        closeModal(DOM.codeUnlockModal);
+        resetCodeUnlockResults();
+    });
+    $('close-profile-btn').addEventListener('click', () => closeModal(DOM.userProfModal));
+    $('close-note-btn').addEventListener('click',    () => closeModal(DOM.askNoteModal));
+    $('close-admin-btn').addEventListener('click',   () => closeModal(DOM.adminDashModal));
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+    $('open-admin-btn').addEventListener('click', openAdminDashboard);
+    $('logout-btn').addEventListener('click', () => logout(false));
+
+    $('submit-note-btn').addEventListener('click', submitNewRegistration);
+    $('new-user-note').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitNewRegistration();
+    });
+
+    $('submit-code-unlock-btn').addEventListener('click', unlockByCode);
+    $('link-access-code').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') unlockByCode();
+    });
+    $('open-login-from-code-btn').addEventListener('click', () => {
+        closeModal(DOM.codeUnlockModal);
+        openLogin();
+    });
+
+    document.querySelectorAll('.admin-tab[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => switchAdminTab(btn.dataset.tab));
+    });
+
+    // ════════════════════════════════════════════════════════════════
+    // § 21 · INIT
+    // ════════════════════════════════════════════════════════════════
+
+    renderOverallStatus();
+    startClock();
+    checkSystemStatus({ notify: false });
+    setInterval(() => checkSystemStatus({ notify: false }), 60000);
+
+    const savedSession = loadSession();
+    if (savedSession?.email && savedSession?.idToken) {
+        state.idToken = savedSession.idToken;
+        renderSkeleton('Restoring Session…');
+        loadData(savedSession.email, savedSession.name || '', savedSession.pic || '');
     } else {
-        init();
+        loadData();
     }
 
-    // Expose for Google Identity
-    window.handleCredentialResponse = handleCredentialResponse;
+    // Offline detection
+    window.addEventListener('offline', () => toast('กำลังออฟไลน์', 'error', 'fas fa-wifi-slash'));
+    window.addEventListener('online', () => toast('กลับมาออนไลน์แล้ว', 'success', 'fas fa-wifi'));
+
     </script>
 </body>
 </html>
