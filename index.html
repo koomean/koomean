@@ -1161,19 +1161,21 @@
 
     async function loadData(userEmail = '', userName = '', userPic = '', userNote = null, isFreshLogin = false) {
         try {
-            // ใช้ GET เพื่อความเข้ากันได้กับ backend ทุกเวอร์ชัน (doGet รองรับ GET เสมอ) — เสถียรกว่าพึ่ง POST-delegation
-            const qp = [
-                `action=${userNote !== null ? 'register' : 'bootstrap'}`,
-                `ua=${encodeURIComponent(CLIENT_UA)}`
-            ];
-            if (state.idToken) qp.push(`idToken=${encodeURIComponent(state.idToken)}`);
+            // ส่งผ่าน POST body เพื่อซ่อน idToken ออกจาก URL (backend doPost ส่งต่อ read-action ให้ doGet)
+            const form = new URLSearchParams();
+            form.append('action', userNote !== null ? 'register' : 'bootstrap');
+            form.append('ua', CLIENT_UA);
+            if (state.idToken) form.append('idToken', state.idToken);
             if (userEmail) {
-                qp.push(`email=${encodeURIComponent(userEmail)}`);
-                qp.push(`name=${encodeURIComponent(userName)}`);
-                if (userNote !== null) qp.push(`note=${encodeURIComponent(userNote)}`);
+                form.append('email', userEmail);
+                form.append('name', userName);
+                if (userNote !== null) form.append('note', userNote);
             }
-            qp.push(`_=${Date.now()}`);
-            const data = await robustFetch(API_URL + '?' + qp.join('&'));
+            const data = await robustFetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: form.toString()
+            });
 
             if (data && data.code === 429) { noteRateLimited(); hideGlobalLoader(); return; }
 
