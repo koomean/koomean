@@ -509,11 +509,22 @@
     // § 1 · CONSTANTS & STATE
     // ════════════════════════════════════════════════════════════════
 
-    const API_URL     = "https://script.google.com/macros/s/AKfycbwBYhFTW68AfN4cYUJYS1DG7vw-Ocykx5kslSUQIeJJlfu0oeBIdi9xAhVmorVWQ4q7rg/exec";
+    // ผ่าน Cloudflare Worker (กัน flood) → Worker ส่งต่อไป Apps Script
+    // ตัวตรง (เผื่อย้อนกลับ): https://script.google.com/macros/s/AKfycbwBYhFTW68AfN4cYUJYS1DG7vw-Ocykx5kslSUQIeJJlfu0oeBIdi9xAhVmorVWQ4q7rg/exec
+    const API_URL     = "https://koomean-proxy.meanchannel52.workers.dev";
     const SESSION_KEY = 'koomean_session_v3';
     const FETCH_TIMEOUT = 15000;
     const MAX_RETRIES = 2;
     const CLIENT_UA = (navigator.userAgent || '').slice(0, 300);
+
+    // rate-limit backoff (เมื่อ backend ตอบ 429)
+    let rateCooldownUntil = 0;
+    const inCooldown = () => Date.now() < rateCooldownUntil;
+    function noteRateLimited() {
+        if (inCooldown()) return;
+        rateCooldownUntil = Date.now() + 20000;
+        toast('ระบบกำลังใช้งานหนาแน่น พักสักครู่แล้วลองใหม่', 'error', 'fas fa-hourglass-half');
+    }
 
     const state = {
         accessRoles   : ['public'],   
@@ -670,7 +681,8 @@
 
     async function postData(action, params = {}) {
         if (!state.idToken) throw new Error("Authentication required");
-        
+        if (inCooldown()) throw new Error('ระบบกำลังพักชั่วคราว กรุณารอสักครู่');
+
         const formData = new URLSearchParams();
         formData.append('action', action);
         formData.append('idToken', state.idToken);
@@ -687,7 +699,9 @@
         });
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.json();
+        const d = await res.json();
+        if (d && d.code === 429) { noteRateLimited(); throw new Error(d.message || 'rate limited'); }
+        return d;
     }
 
     async function robustFetch(url, opts = {}, retries = MAX_RETRIES) {
@@ -1160,6 +1174,8 @@
             }
             qp.push(`_=${Date.now()}`);
             const data = await robustFetch(API_URL + '?' + qp.join('&'));
+
+            if (data && data.code === 429) { noteRateLimited(); hideGlobalLoader(); return; }
 
             setSystemStatus('api',   'ok');
             setSystemStatus('media', 'ok');
