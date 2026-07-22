@@ -65,6 +65,15 @@
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
+        /* Scroll progress bar */
+        #scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px; width: 100%;
+            transform: scaleX(0); transform-origin: 0 50%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-special));
+            box-shadow: 0 0 10px var(--accent-glow);
+            z-index: 1001; pointer-events: none; transition: transform .1s linear;
+        }
+
         /* Accessibility */
         *:focus-visible {
             outline: 2px solid var(--accent);
@@ -180,8 +189,12 @@
             contain: layout style paint; min-height: 66px;
             touch-action: manipulation;
         }
-        .link-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent); transform: skewX(-25deg); transition: .6s ease-in-out; }
+        .link-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent); transform: skewX(-25deg); transition: .6s ease-in-out; z-index: 0; }
         .link-card:hover::before { left: 150%; }
+        /* Cursor-follow spotlight glow */
+        .link-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity .35s var(--ease); pointer-events: none; z-index: 0; background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.10), transparent 65%); }
+        .link-card:hover::after { opacity: 1; }
+        .link-card > * { position: relative; z-index: 1; }
         .link-card:hover { background: var(--card-hover); transform: translateY(-4px) scale(1.01); border-color: rgba(255,255,255,0.15); box-shadow: 0 20px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08); }
         .link-card:active { transform: translateY(-1px) scale(0.995); transition-duration: 0.1s; }
         .link-card.special-access { background: rgba(255, 159, 10, 0.08); border-color: rgba(255, 159, 10, 0.2); }
@@ -325,6 +338,8 @@
 </head>
 <body>
 
+    <div id="scroll-progress" aria-hidden="true"></div>
+
     <div id="global-loader" class="global-loader-container">
         <div class="glow-orb"></div>
         <div class="g-spinner"></div>
@@ -358,7 +373,7 @@
             </div>
             <div class="nav-clock" id="nav-clock" aria-live="polite">00:00</div>
             <div class="nav-user-container" id="profile-btn" role="button" aria-label="User profile">
-                <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" alt="User profile" onerror="this.src='https://ui-avatars.com/api/?name=User&background=161616&color=86868b'">
+                <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" alt="User profile" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User&background=161616&color=86868b'">
                 <div class="nav-user-badge" id="nav-user-badge" aria-hidden="true"></div>
             </div>
         </div>
@@ -366,7 +381,7 @@
 
     <div class="profile-section fade-in" id="profile-section">
         <div class="profile-img-wrap">
-            <img src="" class="profile-img" id="main-profile-img" alt="Profile" onerror="this.src='https://ui-avatars.com/api/?name=M&background=161616&color=86868b'">
+            <img src="" class="profile-img" id="main-profile-img" alt="Profile" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=M&background=161616&color=86868b'">
         </div>
         <h1 id="profile-name">...</h1>
         <p class="bio" id="profile-bio">...<br><br></p>
@@ -498,6 +513,7 @@
     const SESSION_KEY = 'koomean_session_v3';
     const FETCH_TIMEOUT = 15000;
     const MAX_RETRIES = 2;
+    const CLIENT_UA = (navigator.userAgent || '').slice(0, 300);
 
     const state = {
         accessRoles   : ['public'],   
@@ -597,6 +613,13 @@
         } catch { return null; }
     }
 
+    // Google ID tokens มีอายุ ~1 ชม. ถ้าหมดอายุแล้วอย่าเอาไป restore
+    function isTokenExpired(token) {
+        const p = decodeJwt(token);
+        if (!p || !p.exp) return true;
+        return (p.exp * 1000) <= Date.now();
+    }
+
     function debounce(fn, ms) {
         let timer;
         return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
@@ -651,7 +674,8 @@
         const formData = new URLSearchParams();
         formData.append('action', action);
         formData.append('idToken', state.idToken);
-        
+        formData.append('ua', CLIENT_UA);
+
         for (const key in params) {
             formData.append(key, params[key]);
         }
@@ -836,12 +860,18 @@
     // § 10 · MODAL HELPERS
     // ════════════════════════════════════════════════════════════════
 
+    const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    let _lastFocused = null;
+
     const openModal  = (el) => {
         if (!el) return;
+        _lastFocused = document.activeElement;
         el.style.display = 'flex';
         el.classList.add('show');
         el.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
+        const first = el.querySelector(FOCUSABLE);
+        if (first) setTimeout(() => first.focus(), 50);
     };
     const closeModal = (el) => {
         if (!el) return;
@@ -849,7 +879,27 @@
         el.classList.remove('show');
         el.setAttribute('aria-hidden', 'true');
         if (!document.querySelector('.modal.show')) document.body.classList.remove('modal-open');
+        // คืน focus กลับไปที่ปุ่มที่เปิด modal
+        if (_lastFocused && typeof _lastFocused.focus === 'function') {
+            _lastFocused.focus();
+            _lastFocused = null;
+        }
     };
+
+    // Focus trap: กด Tab วนอยู่ใน modal ที่เปิดอยู่
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab') return;
+        const modal = document.querySelector('.modal.show');
+        if (!modal) return;
+        const items = Array.from(modal.querySelectorAll(FOCUSABLE)).filter(el => el.offsetParent !== null);
+        if (!items.length) return;
+        const first = items[0], last = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault(); last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault(); first.focus();
+        }
+    });
 
     function openAbout()  { DOM.modalText.textContent = state.aboutText || 'No info.'; openModal(DOM.aboutModal); }
     function openStatus() { openModal(DOM.statusModal); checkSystemStatus({ notify: false }); }
@@ -857,7 +907,7 @@
 
     window.addEventListener('click', (e) => {
         if (!e.target.closest('.dropdown')) {
-            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+            closeAllDropdowns();
         }
         [DOM.aboutModal, DOM.statusModal, DOM.loginModal,
          DOM.codeUnlockModal, DOM.userProfModal, DOM.adminDashModal, DOM.askNoteModal]
@@ -867,7 +917,7 @@
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal').forEach(m => { if (m.style.display === 'flex' || m.classList.contains('show')) closeModal(m); });
-            document.querySelectorAll('.dropdown-content').forEach(d => d.classList.remove('show'));
+            closeAllDropdowns();
         }
     });
 
@@ -875,9 +925,26 @@
     // § 11 · DROPDOWN HELPERS
     // ════════════════════════════════════════════════════════════════
 
+    // map: list element id → ปุ่มที่คุมมัน (สำหรับ sync aria-expanded)
+    const DROP_BTN = {
+        'apps-dropdown-list'    : 'apps-dropbtn',
+        'simulate-dropdown-list': 'simulate-dropbtn',
+    };
+    function setDropExpanded(listId, expanded) {
+        const btn = $(DROP_BTN[listId]);
+        if (btn) btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    }
+    function closeAllDropdowns() {
+        document.querySelectorAll('.dropdown-content').forEach(d => {
+            d.classList.remove('show');
+            setDropExpanded(d.id, false);
+        });
+    }
+
     function toggleDropdown(targetId, otherIds = []) {
-        $(targetId).classList.toggle('show');
-        otherIds.forEach(id => $(id).classList.remove('show'));
+        const isShown = $(targetId).classList.toggle('show');
+        setDropExpanded(targetId, isShown);
+        otherIds.forEach(id => { $(id).classList.remove('show'); setDropExpanded(id, false); });
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -892,9 +959,9 @@
                 (l.title || '').toLowerCase().includes(term) ||
                 (l.url || '').toLowerCase().includes(term)
             );
-            renderLinks(filtered);
+            renderLinks(filtered, false);
         } else {
-            renderLinks(state.allLinks);
+            renderLinks(state.allLinks, false);
         }
     }
     DOM.searchInput.addEventListener('input', debounce(handleSearchInput, 150));
@@ -976,7 +1043,7 @@
             DOM.viewAsText.textContent = `View As: ADMIN`;
         }
         renderLinks(state.allLinks);
-        DOM.simulateList.classList.remove('show');
+        closeAllDropdowns();
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -1080,28 +1147,22 @@
 
     async function loadData(userEmail = '', userName = '', userPic = '', userNote = null, isFreshLogin = false) {
         try {
-            let url = API_URL;
-            let queryParams = [
-                `action=${userNote !== null ? 'register' : 'bootstrap'}`
-            ];
-
-            if (state.idToken) {
-                queryParams.push(`idToken=${encodeURIComponent(state.idToken)}`);
-            }
-
+            // ส่งผ่าน POST body เพื่อไม่ให้ idToken ไปโผล่ใน URL (backend doPost ส่งต่อ read-action ให้ doGet)
+            const form = new URLSearchParams();
+            form.append('action', userNote !== null ? 'register' : 'bootstrap');
+            form.append('ua', CLIENT_UA);
+            if (state.idToken) form.append('idToken', state.idToken);
             if (userEmail) {
-                queryParams.push(`email=${encodeURIComponent(userEmail)}`);
-                queryParams.push(`name=${encodeURIComponent(userName)}`);
-                if (userNote !== null) {
-                    queryParams.push(`note=${encodeURIComponent(userNote)}`);
-                }
+                form.append('email', userEmail);
+                form.append('name', userName);
+                if (userNote !== null) form.append('note', userNote);
             }
 
-            if (queryParams.length > 0) {
-                url += '?' + queryParams.join('&');
-            }
-
-            const data = await robustFetch(url);
+            const data = await robustFetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: form.toString()
+            });
 
             setSystemStatus('api',   'ok');
             setSystemStatus('media', 'ok');
@@ -1249,7 +1310,7 @@
         try {
             const result = await postData('updateLink', {
                 title: link.title,
-                url: link.group || 'public',
+                url: link.group || 'public', // NOTE: field ชื่อ 'url' แต่ backend ใช้เก็บค่า "group/role" ของลิงก์
                 starred: newStarred
             });
             
@@ -1287,6 +1348,7 @@
         card.href      = link.url;
         card.target    = '_blank';
         card.rel       = 'noopener noreferrer';
+        card.setAttribute('role', 'listitem');
 
         let cardClass = 'link-card fade-in';
         if (link.starred) cardClass += ' starred-card';
@@ -1350,7 +1412,7 @@
     // § 17 · RENDER LINKS
     // ════════════════════════════════════════════════════════════════
 
-    function renderLinks(linksData) {
+    function renderLinks(linksData, animate = true) {
         if (!linksData?.length) {
             DOM.linksContainer.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:30px 0;">No links found</p>';
             updateNavbarImage();
@@ -1413,7 +1475,13 @@
         DOM.linksContainer.innerHTML = '';
         DOM.linksContainer.appendChild(frag);
 
-        DOM.linksContainer.querySelectorAll('.fade-in').forEach(el => fadeObserver.observe(el));
+        DOM.linksContainer.querySelectorAll('.fade-in').forEach(el => {
+            if (animate) {
+                fadeObserver.observe(el);
+            } else {
+                el.classList.add('visible'); // แสดงทันที ไม่ต้อง fade ซ้ำ (ใช้ตอนค้นหา)
+            }
+        });
         updateNavbarImage();
     }
 
@@ -1589,6 +1657,7 @@
             if (action === 'updateRole') {
                 params = { targetEmail: param1, newRole: param2 };
             } else if (action === 'updateLink') {
+                // param2 = group/role string (backend รับผ่าน field ชื่อ 'url')
                 params = { title: param1, url: param2, starred: starredValue === true };
             }
 
@@ -1721,12 +1790,11 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
         resetCodeUnlockResults();
 
-        const popup = window.open('', '_blank');
-
         try {
             const formData = new URLSearchParams();
             formData.append('action', 'unlockByCode');
             formData.append('code', code);
+            formData.append('ua', CLIENT_UA);
 
             const res = await fetch(API_URL, {
                 method: 'POST',
@@ -1750,25 +1818,14 @@
             }
 
             if (links.length === 1) {
-                closeModal(DOM.codeUnlockModal);
-                DOM.linkAccessCode.value = '';
-                resetCodeUnlockResults();
-                toast('เปิดลิงก์: ' + (links[0].title || 'Unlocked'), 'success', 'fas fa-unlock');
-
-                if (popup) {
-                    popup.location.href = links[0].url;
-                } else {
-                    window.location.href = links[0].url;
-                }
+                openUnlockedLink(links[0]);
                 return;
             }
 
-            if (popup) popup.close();
             renderUnlockChoices(links);
             toast(`พบ ${links.length} ลิงก์ เลือกอันที่ต้องการเปิด`, 'success', 'fas fa-list');
 
         } catch (err) {
-            if (popup) popup.close();
             toast(err.message || 'ปลดล็อกไม่สำเร็จ', 'error', 'fas fa-times-circle');
         } finally {
             btn.disabled = false;
@@ -1831,17 +1888,57 @@
     setInterval(() => checkSystemStatus({ notify: false }), 60000);
 
     const savedSession = loadSession();
-    if (savedSession?.email && savedSession?.idToken) {
+    if (savedSession?.email && savedSession?.idToken && !isTokenExpired(savedSession.idToken)) {
         state.idToken = savedSession.idToken;
         renderSkeleton('Restoring Session…');
         loadData(savedSession.email, savedSession.name || '', savedSession.pic || '');
     } else {
+        if (savedSession?.idToken) {
+            // เคยล็อกอินไว้แต่ token หมดอายุแล้ว → เคลียร์ทิ้งแล้วแจ้งผู้ใช้
+            clearSession();
+            toast('เซสชันหมดอายุ กรุณาล็อกอินใหม่', '', 'fas fa-clock');
+        }
         loadData();
     }
 
     // Offline detection
     window.addEventListener('offline', () => toast('กำลังออฟไลน์', 'error', 'fas fa-wifi-slash'));
     window.addEventListener('online', () => toast('กลับมาออนไลน์แล้ว', 'success', 'fas fa-wifi'));
+
+    // ════════════════════════════════════════════════════════════════
+    // § 22 · VISUAL EFFECTS (scroll progress + cursor spotlight)
+    // ════════════════════════════════════════════════════════════════
+    (function initEffects() {
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Scroll progress bar
+        const bar = $('scroll-progress');
+        if (bar) {
+            let ticking = false;
+            const update = () => {
+                const h = document.documentElement.scrollHeight - window.innerHeight;
+                const ratio = h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) : 0;
+                bar.style.transform = 'scaleX(' + ratio + ')';
+                ticking = false;
+            };
+            window.addEventListener('scroll', () => {
+                if (!ticking) { requestAnimationFrame(update); ticking = true; }
+            }, { passive: true });
+            window.addEventListener('resize', update);
+            update();
+        }
+
+        // Cursor-follow spotlight on link cards (delegated, skipped for reduced-motion)
+        if (!reduceMotion && DOM.linksContainer) {
+            DOM.linksContainer.addEventListener('pointermove', (e) => {
+                const card = e.target.closest('.link-card');
+                if (!card) return;
+                const r = card.getBoundingClientRect();
+                card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+                card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+            }, { passive: true });
+        }
+    })();
 
     </script>
 </body>
