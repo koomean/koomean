@@ -139,6 +139,51 @@
         .dropdown-content a { color: var(--text-main); padding: 14px 20px; text-decoration: none; display: block; font-size: 0.95rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all .2s; cursor: pointer; }
         .dropdown-content a:last-child { border-bottom: none; }
         .dropdown-content a:hover { background: rgba(255,255,255,0.1); padding-left: 25px; color: var(--accent); }
+        .nav-apps {
+            padding: 6px 14px; border-radius: 999px; font-weight: 600;
+            color: #bcd9ff;
+            background: linear-gradient(135deg, rgba(41,151,255,0.16), rgba(125,91,255,0.10));
+            border: 1px solid rgba(41,151,255,0.25);
+            transition: color .3s, background .3s, border-color .3s, box-shadow .3s, transform .2s;
+        }
+        .nav-apps .nav-apps-icon { color: var(--accent); font-size: .85rem; transition: color .3s; }
+        .nav-apps:hover, .nav-apps.active {
+            color: #fff;
+            background: linear-gradient(135deg, rgba(41,151,255,0.30), rgba(125,91,255,0.20));
+            border-color: rgba(41,151,255,0.5);
+            box-shadow: 0 4px 16px rgba(41,151,255,0.28);
+        }
+        .nav-apps:hover .nav-apps-icon { color: #fff; }
+
+        .nav-blog {
+            position: relative; overflow: hidden; text-decoration: none;
+            display: flex; align-items: center; gap: 7px;
+            padding: 7px 16px; border-radius: 999px;
+            font-size: 0.9rem; font-weight: 700; letter-spacing: .2px;
+            color: #fff; white-space: nowrap;
+            background: linear-gradient(135deg, var(--accent), #7d5bff 55%, var(--accent-special));
+            background-size: 200% 200%;
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 4px 18px rgba(41,151,255,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+            animation: blogGradient 6s ease infinite, blogPulse 3s ease-in-out infinite;
+            transition: transform .25s var(--ease-bounce), box-shadow .3s;
+        }
+        .nav-blog::after {
+            content: ''; position: absolute; top: 0; left: -120%; width: 60%; height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,0.45), transparent);
+            transform: skewX(-20deg); animation: blogShine 4.5s ease-in-out infinite;
+        }
+        .nav-blog:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 28px rgba(125,91,255,0.55), inset 0 1px 0 rgba(255,255,255,0.35); }
+        .nav-blog:active { transform: translateY(0) scale(.98); }
+        .nav-blog i { font-size: .85rem; }
+        .nav-blog .nav-blog-dot {
+            width: 6px; height: 6px; border-radius: 50%; background: #fff;
+            box-shadow: 0 0 8px #fff; animation: blogPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes blogGradient { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes blogPulse { 0%,100% { opacity: 1; } 50% { opacity: .82; } }
+        @keyframes blogShine { 0% { left: -120%; } 45%,100% { left: 140%; } }
+
         .nav-right { display: flex; align-items: center; gap: 18px; }
         .status-indicator { display: flex; align-items: center; gap: 8px; cursor: pointer; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; font-weight: 600; transition: all .3s; }
         .status-indicator:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
@@ -322,11 +367,15 @@
             .navbar { padding: 0 15px; gap: 8px; }
             .nav-left { gap: 12px; }
             .nav-right { gap: 10px; }
+            .nav-apps { padding: 5px 11px; font-size: 0.82rem; gap: 4px; }
+            .nav-blog { padding: 6px 12px; font-size: 0.82rem; gap: 5px; }
+            .nav-blog .nav-blog-dot { display: none; }
             .modal-content { padding: 28px 22px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
-            body::before, body::after, .glow-orb, .g-loader-text, .profile-img, .g-spinner, .link-card::before {
+            body::before, body::after, .glow-orb, .g-loader-text, .profile-img, .g-spinner, .link-card::before,
+            .nav-blog, .nav-blog::after, .nav-blog .nav-blog-dot {
                 animation: none;
             }
             .navbar, .dropdown-content, .modal, #toast {
@@ -353,11 +402,14 @@
                 <span style="font-size: 1.3rem;">💻</span><span>Koo Mean SITE V.2</span>
             </a>
             <div class="dropdown">
-                <div class="menu-link dropbtn" id="apps-dropbtn" aria-haspopup="true" aria-expanded="false">
-                    Apps <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i>
+                <div class="menu-link dropbtn nav-apps" id="apps-dropbtn" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-grip nav-apps-icon"></i> Apps <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:2px; margin-top: 2px;"></i>
                 </div>
                 <div class="dropdown-content" id="apps-dropdown-list" role="menu"></div>
             </div>
+            <a href="https://koomean.github.io/koomeanblog/" target="_blank" rel="noopener noreferrer" class="nav-blog" id="blog-btn" aria-label="ไปยังเว็บ Koo Mean Blog">
+                <i class="fas fa-feather-pointed"></i><span>Blog</span><span class="nav-blog-dot" aria-hidden="true"></span>
+            </a>
             <div class="dropdown" id="admin-simulate-dropdown" style="display: none;">
                 <div class="menu-link dropbtn" id="simulate-dropbtn" style="color: var(--accent-admin); font-weight: bold;" aria-haspopup="true" aria-expanded="false">
                     <i class="fas fa-eye" style="margin-right: 4px;"></i> <span id="view-as-text">View As: ADMIN</span> <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left:4px; margin-top: 2px;"></i>
