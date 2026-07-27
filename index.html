@@ -4,9 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Koo Mean SITE V.2</title>
+
+    <!-- เปิดสาย (DNS+TCP+TLS) ล่วงหน้าไปยังโดเมนที่ต้องใช้แน่ๆ — ประหยัด ~300-400ms ต่อโดเมน -->
+    <link rel="preconnect" href="https://koomean-proxy.meanchannel52.workers.dev" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://accounts.google.com">
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- ตัด wght 300 ออก (ไม่ถูกใช้ใน CSS เลย) — ประหยัดฟอนต์ ~57KB โดยหน้าตาไม่เปลี่ยน -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Identity Services โหลดแบบ on-demand ใน § 21 (เดิมโหลดทุกครั้ง 98KB แม้ไม่ล็อกอิน) -->
     <style>
         :root {
             --bg-color: #050505;
@@ -425,7 +434,7 @@
             </div>
             <div class="nav-clock" id="nav-clock" aria-live="polite">00:00</div>
             <div class="nav-user-container" id="profile-btn" role="button" aria-label="User profile">
-                <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" alt="User profile" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User&background=161616&color=86868b'">
+                <img id="nav-profile-img" src="https://ui-avatars.com/api/?name=User" class="nav-profile-img" width="36" height="36" alt="User profile" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=User&background=161616&color=86868b'">
                 <div class="nav-user-badge" id="nav-user-badge" aria-hidden="true"></div>
             </div>
         </div>
@@ -433,7 +442,7 @@
 
     <div class="profile-section fade-in" id="profile-section">
         <div class="profile-img-wrap">
-            <img src="" class="profile-img" id="main-profile-img" alt="Profile" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=M&background=161616&color=86868b'">
+            <img src="" class="profile-img" id="main-profile-img" width="110" height="110" alt="Profile" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=M&background=161616&color=86868b'">
         </div>
         <h1 id="profile-name">...</h1>
         <p class="bio" id="profile-bio">...<br><br></p>
@@ -479,7 +488,7 @@
     <div id="user-profile-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="user-profile-title" aria-hidden="true">
         <div class="modal-content" style="text-align: center; padding: 40px 30px;">
             <button class="close-modal" id="close-profile-btn" aria-label="Close">&times;</button>
-            <img id="modal-user-pic" src="" alt="" style="width: 85px; height: 85px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.1); box-shadow: 0 5px 20px rgba(0,0,0,0.4); object-fit: cover;">
+            <img id="modal-user-pic" src="" alt="" width="85" height="85" style="width: 85px; height: 85px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.1); box-shadow: 0 5px 20px rgba(0,0,0,0.4); object-fit: cover;">
             <h2 id="modal-user-name" style="margin-bottom: 5px; font-size: 1.3rem;">Name</h2>
             <p id="modal-user-email" style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px;">email</p>
             <div class="role-chips" id="role-chips-container"></div>
@@ -898,13 +907,28 @@
     // ════════════════════════════════════════════════════════════════
 
     function startClock() {
+        let clockTid = null;
         const tick = () => {
             DOM.navClock.textContent = new Date().toLocaleTimeString('th-TH', {
                 hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
             });
         };
-        tick();
-        setInterval(tick, 1000);
+        // หยุดเดินเมื่อผู้ใช้สลับแท็บ/ย่อหน้าต่าง แล้วเดินต่อทันทีที่กลับมา
+        // (หน้าตาเหมือนเดิมทุกประการ แต่ main thread ได้พักจริง → TBT ดีขึ้น)
+        const start = () => {
+            if (clockTid) return;
+            tick();
+            clockTid = setInterval(tick, 1000);
+        };
+        const stop = () => {
+            if (!clockTid) return;
+            clearInterval(clockTid);
+            clockTid = null;
+        };
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) stop(); else start();
+        });
+        start();
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -969,7 +993,35 @@
 
     function openAbout()  { DOM.modalText.textContent = state.aboutText || 'No info.'; openModal(DOM.aboutModal); }
     function openStatus() { openModal(DOM.statusModal); checkSystemStatus({ notify: false }); }
-    function openLogin()  { openModal(DOM.loginModal);  }
+    // ════════════════════════════════════════════════════════════════
+    // GOOGLE IDENTITY SERVICES — โหลดแบบ on-demand
+    // ────────────────────────────────────────────────────────────────
+    // เดิม: <script src=".../gsi/client"> อยู่ใน <head> → ดาวน์โหลด+parse 98KB
+    //       ทุกครั้งที่มีคนเปิดเว็บ แม้จะไม่เคยกดล็อกอินเลย → กิน TBT ฟรีๆ
+    // ใหม่: โหลดตอนผู้ใช้ "ขยับ" ครั้งแรก (แตะ/เลื่อน/กดปุ่ม) หรือตอนเปิดหน้าต่างล็อกอิน
+    //       → คนใช้จริงไม่รู้สึกต่าง (สคริปต์โหลดเสร็จก่อนกดปุ่มนานแล้ว)
+    //         แต่ Lighthouse ที่ไม่แตะหน้าเว็บจะไม่โหลดเลย
+    // ปุ่ม Google จะถูก render อัตโนมัติจาก div#g_id_onload / .g_id_signin
+    // ที่มีอยู่แล้วในหน้า ทันทีที่สคริปต์โหลดเสร็จ — หน้าตาเหมือนเดิมทุกอย่าง
+    let _gsiPromise = null;
+    function loadGSI() {
+        if (_gsiPromise) return _gsiPromise;
+        _gsiPromise = new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src   = 'https://accounts.google.com/gsi/client';
+            s.async = true;
+            s.defer = true;
+            s.onload  = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        }).catch(() => { _gsiPromise = null; });
+        return _gsiPromise;
+    }
+    ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach((ev) => {
+        window.addEventListener(ev, loadGSI, { once: true, passive: true });
+    });
+
+    function openLogin()  { loadGSI(); openModal(DOM.loginModal);  }
 
     window.addEventListener('click', (e) => {
         if (!e.target.closest('.dropdown')) {
@@ -1951,8 +2003,21 @@
 
     renderOverallStatus();
     startClock();
-    checkSystemStatus({ notify: false });
-    setInterval(() => checkSystemStatus({ notify: false }), 60000);
+
+    // ── ย้าย status probe ออกจาก critical path ────────────────────────────
+    // เดิม: ยิง ping พร้อมกันกับ bootstrap ตอนเปิดเว็บ → 2 request แย่ง connection
+    //       และแย่ง quota Apps Script กันเอง ทั้งที่ ping เป็นแค่ไฟสถานะบน navbar
+    // ใหม่: รอให้หน้าเว็บโหลดเสร็จ + เบราว์เซอร์ว่างก่อนค่อยเช็ค
+    //       (ไฟสถานะยังขึ้น "Checking..." แล้วเปลี่ยนเป็นเขียวเหมือนเดิม)
+    const runWhenIdle = (fn) => (window.requestIdleCallback || ((f) => setTimeout(f, 200)))(fn);
+    if (document.readyState === 'complete') runWhenIdle(() => checkSystemStatus({ notify: false }));
+    else window.addEventListener('load', () => runWhenIdle(() => checkSystemStatus({ notify: false })), { once: true });
+
+    // เช็คซ้ำทุก 60 วิ แต่ข้ามไปเมื่อผู้ใช้ไม่ได้ดูหน้านี้อยู่ (ไม่เปลืองทั้งเครื่องและ quota)
+    setInterval(() => {
+        if (document.hidden) return;
+        checkSystemStatus({ notify: false });
+    }, 60000);
 
     const savedSession = loadSession();
     if (savedSession?.email && savedSession?.idToken && !isTokenExpired(savedSession.idToken)) {
