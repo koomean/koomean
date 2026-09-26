@@ -1,195 +1,104 @@
 <div align="center">
 
-# 🚀 KOO MEAN SITE V.2
-### **The Ultimate Link Hub & Role-Based Portfolio Platform**
+# ◈ Koo Mean Site
 
-[![Version](https://img.shields.io/badge/Version-2.0.0-blueviolet?style=for-the-badge)]()
-[![Frontend](https://img.shields.io/badge/Frontend-GitHub_Pages-blue?style=for-the-badge)]()
-[![Proxy](https://img.shields.io/badge/Proxy-Cloudflare_Worker-orange?style=for-the-badge)]()
-[![Backend](https://img.shields.io/badge/Backend-Google_Apps_Script-green?style=for-the-badge)]()
-[![Auth](https://img.shields.io/badge/Auth-Google_Identity-white?style=for-the-badge)]()
+### โปรไฟล์และ Link Hub ที่แสดงรายการตามสิทธิ์ของผู้ใช้
+
+![Frontend](https://img.shields.io/badge/Frontend-Single%20HTML-2563eb?style=flat-square)
+![API](https://img.shields.io/badge/API-Cloudflare%20Workers-f38020?style=flat-square)
+![Database](https://img.shields.io/badge/Database-D1-7c3aed?style=flat-square)
+![Authentication](https://img.shields.io/badge/Auth-Google%20Identity-ea4335?style=flat-square)
+
+[ภาพรวม](#overview) · [ฟีเจอร์](#features) · [สิทธิ์](#roles) · [ติดตั้ง](#setup)
 
 </div>
 
----
+> Koo Mean Site เป็นหน้าโปรไฟล์และศูนย์รวมลิงก์/แอป ข้อมูลที่มี role จำกัดจะถูกกรองใน backend ก่อนส่งให้หน้าเว็บ
 
-# 🌟 OVERVIEW (ภาพรวมโปรเจกต์)
+<a id="overview"></a>
+## 🌟 ภาพรวม
 
-**Koo Mean SITE V.2** คือศูนย์รวมลิงก์และพอร์ตโฟลิโอส่วนตัวที่มีระบบหลังบ้านเต็มรูปแบบ ควบคุมการมองเห็นเนื้อหาตามสิทธิ์ของผู้ใช้ (Role-Based Access Control) บนดีไซน์ **Neon Dark Mode**
+หน้าเว็บคือ [`index koomeansite.html`](index%20koomeansite.html) เขียนด้วย HTML/CSS/JavaScript ในไฟล์เดียว ไม่ต้อง build ก่อนเผยแพร่ ใช้ Cloudflare Worker + D1 ตาม [`../CloudFlare/wrangler.portal.jsonc`](../CloudFlare/wrangler.portal.jsonc)
 
-ทั้งเว็บอยู่ในไฟล์ `index.html` ไฟล์เดียว (HTML + CSS + JS รวมกัน) ไม่มี build step ไม่มี dependency ที่ต้องติดตั้ง — แก้เสร็จอัปขึ้น GitHub Pages ได้เลย
-
----
-
-# 🏗️ ARCHITECTURE (สถาปัตยกรรม)
-
-```
-เบราว์เซอร์ (index.html)
-        │
-        │  POST / GET  (application/x-www-form-urlencoded)
-        ▼
-Cloudflare Worker  ── koomean-proxy.meanchannel52.workers.dev
-        │           • ซ่อน URL จริงของ Apps Script ไว้ใน env var "UPSTREAM"
-        │           • ใส่ CORS header
-        │           • แคชคำตอบของ action ประเภทอ่านไว้ที่ edge (worker.js)
-        ▼
-Google Apps Script (doGet / doPost)
-        │           • ตรวจ Google ID Token
-        │           • Rate limit + Circuit breaker
-        │           • CacheService (posts 5 นาที / meta 30 นาที)
-        ▼
-Google Sheets  ──  Profile · Links · Apps · Users · Log
+```mermaid
+flowchart LR
+    V[ผู้เข้าชม] --> SITE[หน้า Koo Mean Site]
+    SITE -->|เข้าสู่ระบบ| GIS[Google Identity Services]
+    GIS -->|ID token| SITE
+    SITE -->|bootstrap / link actions| W[Cloudflare Worker]
+    W -->|ตรวจ token และ role| D1[(D1: users, profile, links, apps)]
+    D1 -->|ข้อมูลที่ผู้ใช้มีสิทธิ์เห็น| W
+    W --> SITE
 ```
 
-> 🔒 หน้าเว็บ **ไม่เคยรู้ URL จริงของ Apps Script** — ถ้าใส่ตรงๆ จะมีคนยิงข้าม Cloudflare ได้
+<a id="features"></a>
+## ✨ ฟีเจอร์
 
----
+| ฟีเจอร์ | รายละเอียด |
+|---|---|
+| **👤 โปรไฟล์** | แสดงชื่อ ข้อมูลแนะนำตัว และ media/profile fields จาก backend |
+| **🖼️ รูปโปรไฟล์/พื้นหลัง** | แสดงรูป Blog/Site ที่ผู้ดูแลเปลี่ยนผ่าน Admin Dashboard และเก็บผ่าน D1 |
+| **🔗 Link Hub** | รวมลิงก์และแอป พร้อมชื่อ ไอคอน กลุ่ม และสถานะปักหมุด |
+| **🔎 ค้นหา** | กรองรายการลิงก์จากหน้าเว็บได้ทันที |
+| **🔐 Google Sign-In** | ให้ผู้ใช้ล็อกอินเพื่อดูเนื้อหาตาม role และส่งคำขอลงทะเบียนเมื่อเป็นผู้ใช้ใหม่ |
+| **🛡️ Role/group** | กำหนดการมองเห็นรายการด้วย `Group` ที่สัมพันธ์กับ role ของผู้ใช้ |
+| **🔑 Access Code** | เปิดลิงก์ที่ตั้งรหัสผ่านได้ผ่านการตรวจสอบกับ backend |
+| **⚙️ Admin tools** | ผู้ดูแลจัดการลิงก์และ role ของผู้ใช้ผ่าน action ที่ Worker อนุญาต |
+| **📱 Responsive UI** | ปรับ layout สำหรับจอคอมพิวเตอร์และมือถือ พร้อมธีมมืด |
 
-# ✨ KEY FEATURES (คุณสมบัติที่มีอยู่จริง)
+<a id="roles"></a>
+## 🛡️ การมองเห็นและสิทธิ์
 
-### 🔒 Role-Based Access Control
-- ลิงก์แต่ละอันกำหนด `Group` ได้ว่าใครเห็นบ้าง — **สิทธิ์เป็นข้อความอิสระ** ไม่ได้ล็อกไว้แค่ 4 ระดับ
-  ตั้งชื่อ role อะไรก็ได้ในชีต `Users` แล้วใส่ชื่อเดียวกันในคอลัมน์ `Group` ของชีต `Links`
-- ผู้ใช้ 1 คนมีได้หลาย role — คั่นด้วย `,` `;` หรือ `|` (เช่น `vip,student`)
-- มีเพียง 2 คำที่มีความหมายพิเศษ: **`admin`** (เห็นทุกอย่าง + เข้าเมนูจัดการได้) และ **`public`** (ค่าเริ่มต้น)
-- การกรองเกิดขึ้น **ฝั่งเซิร์ฟเวอร์** — ลิงก์ที่ไม่มีสิทธิ์จะไม่ถูกส่งมาที่เบราว์เซอร์เลย
+```text
+ผู้ใช้ที่ยังไม่ล็อกอิน ──> รายการ public
+ผู้ใช้ที่ล็อกอิน ───────> public + กลุ่มที่ role ตรงกัน
+ผู้ใช้ role admin ──────> รายการทั้งหมดและเครื่องมือ admin ที่ได้รับอนุญาต
+```
 
-### 🔑 Google Sign-In + Session
-- ล็อกอินผ่าน Google Identity Services (GSI) ด้วย ID Token
-- จำเซสชันไว้ใน `localStorage` (`koomean_session_v3`) และ**เช็ควันหมดอายุของ token ก่อนใช้ซ้ำ** — หมดอายุแล้วเคลียร์ทิ้งอัตโนมัติ
-- ผู้ใช้ใหม่ต้องกรอกข้อความแนะนำตัวก่อน แล้วรอแอดมินปรับสิทธิ์ให้
+- `Group` ระบุ role ที่ดูรายการได้; backend รองรับหลาย role ตามตัวคั่นที่กำหนดในโค้ด
+- Worker ตรวจ ID token และ role ฝั่ง server; การซ่อนเมนูใน frontend ไม่ได้เพิ่มสิทธิ์หรือป้องกัน API
+- Access Code เป็นกลไกปลดล็อกตามการตั้งค่ารายการ ไม่ควรใช้แทน role สำหรับข้อมูลสำคัญ
+- การเพิ่ม/เปลี่ยน role ต้องตรวจผลด้วยบัญชีทดสอบแต่ละระดับ
 
-### 🔐 Unlock by Access Code
-- ลิงก์ที่ใส่ **Access Code** ไว้ในชีต จะไม่ส่ง URL มาที่หน้าเว็บเลยจนกว่าจะกรอกรหัสถูก
-- กรอกรหัส 1 ครั้ง → ระบบแสดงรายการลิงก์ทั้งหมดที่รหัสนั้นปลดล็อกได้
-- ฝั่ง backend มีระบบกัน brute-force (จำกัดจำนวนครั้งที่กรอกผิด ทั้งต่อเครื่องและทั้งระบบ)
+## 🗄️ ข้อมูลและการทำงาน
 
-### 🛠️ In-App Admin Dashboard
-- เปลี่ยน role ของผู้ใช้ได้จากหน้าเว็บ
-- แก้ URL ของลิงก์ และปัก/ถอนหมุด (⭐ Starred) ได้
-- **View As** — จำลองมุมมองของ role อื่นเพื่อเช็คว่าคนทั่วไปเห็นอะไรบ้าง โดยไม่ต้องออกจากระบบ
+| ข้อมูล | D1 table | ใช้ทำอะไร |
+|---|---|---|
+| Profile | `profile` | ข้อมูลส่วนแนะนำตัวและเว็บไซต์ |
+| รูปโปรไฟล์ | `site_profile_images` | รูปโปรไฟล์และภาพพื้นหลังของเว็บ |
+| Links | `links` | URL, icon, Group, starred และ Access Code |
+| Apps | `apps` | รายการแอปที่เกี่ยวข้อง |
+| Users | `users` | บัญชีผู้ใช้และ role ซึ่ง backend ใช้ตรวจสิทธิ์ |
 
-### 🎨 UI / UX
-- Neon Glow บนพื้น Dark Mode + orb เรืองแสงเคลื่อนไหวเป็นพื้นหลัง
-- Global Loader ตอนเปิดเว็บ และ Skeleton ตอนสลับสถานะ
-- **Real-time Search** กรองลิงก์ทันทีที่พิมพ์ (มี debounce)
-- แถบแสดงความคืบหน้าการเลื่อนหน้า + ไฟสปอตไลต์วิ่งตามเมาส์บนการ์ด
-- Fade-in ตอนเลื่อนถึง (IntersectionObserver)
-- รองรับ `prefers-reduced-motion` — ปิดแอนิเมชันและเอฟเฟกต์เบลอให้ผู้ที่ตั้งค่าไว้
+เมื่อเปิดหน้าเว็บ Site ขอ bootstrap จาก Worker; Worker ตรวจตัวตน (ถ้ามี) อ่านข้อมูลจาก D1 และส่งรายการที่ผ่านการกรองกลับมา การแก้ไขจาก admin ก็ส่งผ่าน Worker และตรวจสิทธิ์ใหม่ทุกคำขอ
 
-### 📊 System Health Monitor
-- ไฟสถานะ API / Media บน navbar พร้อมนาฬิกาเวลาไทย
-- เช็คซ้ำทุก 60 วินาที และ**ข้ามการเช็คเมื่อผู้ใช้ไม่ได้เปิดแท็บนี้อยู่**
-- แจ้งเตือนเมื่อออฟไลน์ / กลับมาออนไลน์
+<a id="setup"></a>
+## 🚀 เริ่มต้นใช้งาน
 
-### 🛡️ ความทนทาน
-- ยิง API ใหม่อัตโนมัติเมื่อพลาด (retry 2 ครั้ง) + timeout 15 วินาที
-- เจอ 429 จาก backend → พักการยิง 20 วินาที แล้วแจ้งผู้ใช้
+### ☁️ Deploy backend
 
----
+ตรวจ D1 binding `DB` และ `ALLOWED_ORIGINS` ใน `../CloudFlare/wrangler.portal.jsonc` แล้วจากโฟลเดอร์ `CloudFlare` รัน:
 
-# 🛠️ TECH STACK
+```bash
+npx wrangler deploy --config wrangler.portal.jsonc
+```
 
-| ส่วนงาน | เทคโนโลยีที่ใช้ |
-| :--- | :--- |
-| **Frontend** | HTML5, CSS3 (Custom Properties + Animation), Vanilla JavaScript (ES2020+) |
-| **Proxy** | Cloudflare Workers |
-| **Backend** | Google Apps Script (Web App) |
-| **Database** | Google Sheets |
-| **Auth** | Google Identity Services (GSI) |
-| **Icons** | Font Awesome 6.5.0 (cdnjs) |
-| **Fonts** | Noto Sans Thai (Google Fonts) + system font stack |
+ถ้ามีการเปลี่ยน schema ให้ apply migration ที่จำเป็นก่อน deploy คู่มือย้ายข้อมูลอยู่ที่ [`../CloudFlare/MIGRATE-SHEETS-TO-D1.md`](../CloudFlare/MIGRATE-SHEETS-TO-D1.md)
 
----
+### 🌐 เผยแพร่ frontend
 
-# 📂 DATABASE STRUCTURE (โครงสร้างชีต)
+1. อัปโหลด `index koomeansite.html` ไปยัง HTTPS static host
+2. ตรวจค่า `API_URL` ให้ชี้ Worker ที่ deploy จริง
+3. เพิ่ม origin ของ host ใน OAuth Client → **Authorized JavaScript origins**
+4. เพิ่ม origin เดียวกันใน Worker `ALLOWED_ORIGINS`
+5. ทดสอบหน้า public, login/register, role filtering, access code และการแก้ข้อมูลของ admin
 
-### `Profile` — ใช้แถวที่ 2 แถวเดียว
-| A | B | C | D | E |
-| :-- | :-- | :-- | :-- | :-- |
-| Name | Bio | ImageUrl | VideoUrl | AboutText |
+ไม่จำเป็นต้องมี `portal.koomean.com` เพื่อให้ Site ทำงาน ให้ใช้โดเมนที่ host หน้า Koo Mean Site จริง
 
-> คอลัมน์ F-K ของชีตเดียวกันใช้ร่วมกับเว็บ Blog (WebTitle, SpaceName, SpaceBio, SpaceImageUrl, CoverUrl, Handle)
+## 🧑‍💻 พัฒนาและความปลอดภัย
 
-### `Links`
-| A | B | C | D | E | F |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-| Title | Url | Icon | Group | Starred | AccessCode |
-
-- `Icon` = คลาสของ Font Awesome เช่น `fas fa-globe`
-- `Group` = ว่างหรือ `public` คือทุกคนเห็น · ใส่ชื่อ role คั่นด้วย `,` เพื่อจำกัดสิทธิ์
-- `AccessCode` = ใส่ไว้เมื่อไหร่ ลิงก์นั้นจะถูกซ่อน URL จนกว่าจะกรอกรหัสถูก
-
-### `Apps`
-| A | B |
-| :-- | :-- |
-| Name | Url |
-
-### `Users`
-| A | B | C | D | E | F | G |
-| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| Email | Name | Role | Last Login | Notes | Pic | Created |
-
-### `Log`
-บันทึกเหตุการณ์อัตโนมัติ (ล็อกอิน, สมัคร, ข้อผิดพลาด) — ระบบสร้างให้เองเมื่อใช้งานครั้งแรก
-
----
-
-# 🔌 API ACTIONS ที่หน้านี้เรียกใช้
-
-| Action | Method | ใช้ตอนไหน |
-| :-- | :-- | :-- |
-| `ping` | GET | เช็คสถานะระบบ (ไม่แตะ Sheet) |
-| `bootstrap` | POST | โหลด Profile + Links + Apps + ข้อมูลผู้ใช้ ตอนเปิดเว็บ |
-| `register` | POST | ผู้ใช้ใหม่สมัครเข้าระบบ |
-| `unlockByCode` | POST | ปลดล็อกลิงก์ด้วยรหัสผ่าน |
-| `updateLink` | POST | แอดมินแก้ URL / ปักหมุดลิงก์ |
-| `updateRole` | POST | แอดมินเปลี่ยนสิทธิ์ผู้ใช้ |
-
-> การอ่านข้อมูลส่งผ่าน **POST** เพื่อไม่ให้ `idToken` ติดไปกับ URL
-
----
-
-# ⚙️ INSTALLATION (การตั้งค่า)
-
-1. **Google Sheet** — สร้างชีตชื่อ `Profile`, `Links`, `Apps`, `Users` ตามโครงสร้างด้านบน
-2. **Apps Script** — วางโค้ด `BackEnd.gs` แล้ว Deploy เป็น Web App
-   (Execute as: *Me* · Who has access: *Anyone*) แล้วคัดลอก URL `/exec` เก็บไว้
-3. **Google Cloud Console** — สร้าง OAuth Client ID (Web application)
-   ใส่โดเมนของ GitHub Pages ใน *Authorized JavaScript origins*
-   แล้วนำ Client ID ไปใส่ทั้งใน `index.html` (`data-client_id`) และใน `CONFIG.GOOGLE_CLIENT_ID` ของ Apps Script — **ต้องตรงกัน ไม่งั้นล็อกอินไม่ผ่าน**
-4. **Cloudflare Worker** — วางโค้ด `worker.js` แล้วตั้ง Environment Variable
-   `UPSTREAM` = URL `/exec` จากข้อ 2 · จากนั้นนำ URL ของ Worker ไปใส่ที่ตัวแปร `API_URL` ใน `index.html`
-5. **Deploy** — อัป `index.html` ขึ้น GitHub แล้วเปิด GitHub Pages
-
----
-
-# ⚡ PERFORMANCE NOTES
-
-สิ่งที่ทำไปแล้วเพื่อให้หน้าเว็บเบาและคะแนน PageSpeed ดีขึ้น:
-
-- **Google Sign-In โหลดแบบ on-demand** — ไม่ดาวน์โหลด 98 KB ให้คนที่แค่เข้ามาดูลิงก์เฉยๆ
-  โหลดตอนผู้ใช้แตะ/เลื่อน/พิมพ์ครั้งแรก หรือตอนกดปุ่มล็อกอิน
-- **`preconnect`** ไปยัง API, cdnjs และ Google Fonts ตั้งแต่บรรทัดแรกของ `<head>`
-- **ตัดน้ำหนักฟอนต์ที่ไม่ได้ใช้** — Noto Sans Thai เหลือ 400/500/600/700 (เดิมมี 300 ที่ไม่ถูกเรียกใช้เลย)
-- **`ping` ไม่อยู่บน critical path** — รอหน้าเว็บโหลดเสร็จและเบราว์เซอร์ว่างก่อนค่อยเช็คสถานะ
-- **นาฬิกาและตัวเช็คสถานะหยุดทำงานเมื่อสลับแท็บ**
-- **`<img>` ทุกตัวระบุ `width`/`height`** เพื่อไม่ให้หน้าเว็บกระตุกตอนโหลดรูป (CLS)
-- **Edge cache ที่ Cloudflare Worker** — Apps Script มี latency พื้นฐาน 2-3 วินาทีต่อ request
-  ที่ frontend แก้ไม่ได้ `worker.js` จึงแคชคำตอบของ action ประเภทอ่านไว้ที่ edge (แยกแคชตามสิทธิ์ผู้ใช้)
-
----
-
-# 👨‍💻 AUTHOR
-**koomean**
-> "Coding with ChatGPT 5.6 Sol and Claude Fable 5, designing with vision."
-
-**Personal Gear Setup:**
-- 💻 **Macbook Air M5** (Primary Dev Machine)
-- 📱 **iPhone 14 Pro** (Mobile Experience Testing)
-- 🗄️ **Synology DS423+** (Private Cloud Storage)
-
----
-<div align="center">
-  <sub>Copyright © 2026 koomean. All rights reserved.</sub>
-</div>
+- UI อยู่ใน `index koomeansite.html`; API และ authorization อยู่ใน [`../CloudFlare/koomean-d1-worker.js`](../CloudFlare/koomean-d1-worker.js)
+- HTML นี้ไม่มี build step; แก้ไฟล์แล้วเผยแพร่ static page ได้
+- อย่าใส่ Apps Script URL เก่าหรือ credential ส่วนตัวกลับเข้า frontend
+- OAuth Client ID เป็นค่าที่เผยแพร่บน browser ได้; client secret และ service-account key ต้องเก็บเป็นความลับและห้าม commit
+- README นี้อธิบาย source/config ใน repository ไม่ได้รับรองสถานะ production deployment
