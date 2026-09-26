@@ -1275,11 +1275,23 @@
                 form.append('name', userName);
                 if (userNote !== null) form.append('note', userNote);
             }
-            const data = await robustFetch(API_URL, {
+            let data = await robustFetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: form.toString()
             });
+
+            // D1 register returns only the registration result. Fetch bootstrap next
+            // so the new account gets its server-assigned role and a logged-in UI.
+            if (userNote !== null && data?.success) {
+                form.set('action', 'bootstrap');
+                form.delete('note');
+                data = await robustFetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: form.toString()
+                });
+            }
 
             if (data && data.code === 429) { noteRateLimited(); hideGlobalLoader(); return; }
 
