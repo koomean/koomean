@@ -18,7 +18,7 @@
 <a id="overview"></a>
 ## 🌟 ภาพรวม
 
-หน้าเว็บคือ [`koomean.com`](index%20koomeansite.html) เขียนด้วย HTML/CSS/JavaScript ในไฟล์เดียว ไม่ต้อง build ก่อนเผยแพร่ ใช้ Cloudflare Worker + D1 ตาม [`../CloudFlare/wrangler.portal.jsonc`](../CloudFlare/wrangler.portal.jsonc)
+หน้าเว็บคือ [`https://koomean.com/`](index%20koomeansite.html) เขียนด้วย HTML/CSS/JavaScript ในไฟล์เดียว ไม่ต้อง build ก่อนเผยแพร่ ใช้ Cloudflare Worker + D1 ตาม [`../CloudFlare/wrangler.portal.jsonc`](../CloudFlare/wrangler.portal.jsonc)
 
 ```mermaid
 flowchart LR
