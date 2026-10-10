@@ -33,3 +33,13 @@ html[data-reduce-motion=true] body::before,html[data-reduce-motion=true] body::a
 html[data-reduce-motion=true] .link-card::after,html[data-data-saver=true] .link-card::after { display:none; }
 @media(max-width:480px) { .nav-right { gap:8px; } .settings-row { gap:12px; } .settings-footer { align-items:flex-start; } }
 @media(max-width:380px) { .navbar { padding-left:10px;padding-right:10px; } .nav-left { gap:10px; } .nav-right { gap:6px; } .nav-apps { padding:8px; } .nav-blog { padding:8px 10px; } }
+@media(max-width:380px) {
+  .nav-logo { display:none; }
+  .nav-left { gap:4px; }
+  .nav-right { gap:5px; }
+  .nav-apps { padding:5px 7px;font-size:.78rem; }
+  .nav-blog { padding:6px 8px;font-size:.78rem; }
+  #about-btn { font-size:.8rem; }
+  .settings-button { width:32px;height:32px; }
+  .status-indicator { padding:5px 6px;gap:0; }
+}
