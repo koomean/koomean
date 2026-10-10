@@ -870,7 +870,7 @@
 
     function mediaComponentsStatus() {
         const img = DOM.mainProfileImg;
-        if (!img?.src || !img.complete) return 'checking';
+        if (!img?.getAttribute('src') || !img.complete) return 'checking';
         return img.naturalWidth > 0 ? 'ok' : 'error';
     }
     DOM.mainProfileImg.addEventListener('load', () => setSystemStatus('media', mediaComponentsStatus()));

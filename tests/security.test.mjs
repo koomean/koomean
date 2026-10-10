@@ -60,3 +60,7 @@ test('the request timeout remains active while JSON body is being read',async()=
  x.setTimeout=fn=>{timer=fn;return 1;};x.clearTimeout=()=>{cleared=true;};
  const pending=x.requestJson('https://api.example');await new Promise(r=>setImmediate(r));assert.equal(cleared,false);timer();await assert.rejects(pending,/aborted/);assert.equal(cleared,true);
 });
+test('an empty initial image is pending rather than an outage',()=>{
+ const img={getAttribute:()=>'',complete:true,naturalWidth:0};const x=runtime(section('    function mediaComponentsStatus','    DOM.mainProfileImg.addEventListener'),{DOM:{mainProfileImg:img}});
+ assert.equal(x.mediaComponentsStatus(),'checking');img.getAttribute=()=>'/assets/avatar.svg';img.complete=false;assert.equal(x.mediaComponentsStatus(),'checking');img.complete=true;img.naturalWidth=100;assert.equal(x.mediaComponentsStatus(),'ok');img.naturalWidth=0;assert.equal(x.mediaComponentsStatus(),'error');
+});
