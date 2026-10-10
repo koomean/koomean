@@ -41,7 +41,7 @@ test('5xx is retried and authenticated writes are not retried',async()=>{
 test('an authenticated response cannot commit after the identity changes',async()=>{
  let resolve;const x=fetchRuntime(()=>new Promise(r=>{resolve=r}));const pending=x.postData('updateLink');vm.runInContext('identityEpoch++',x);resolve({status:200,ok:true,json:async()=>({success:true})});await assert.rejects(pending,/superseded/);
 });
-test('CSP build has no inline executable code or countdown theme controls',()=>{
+test('authored HTML has no inline executable code or countdown theme controls',()=>{
  const html=fs.readFileSync('index.html','utf8');assert.match(html,/script-src-attr 'none'/);assert.doesNotMatch(html,/<script(?:\s[^>]*)?>\s*[^<\s]/);assert.doesNotMatch(html,/\son(?:click|error|load)=/i);
  const countdown=html.slice(html.indexOf('id="global-maintenance-overlay"'),html.indexOf('<div id="scroll-progress"'));
  assert.doesNotMatch(countdown,/<select|data-koo-theme/);assert.match(html,/id="settings-theme" data-koo-theme/);
@@ -63,4 +63,8 @@ test('the request timeout remains active while JSON body is being read',async()=
 test('an empty initial image is pending rather than an outage',()=>{
  const img={getAttribute:()=>'',complete:true,naturalWidth:0};const x=runtime(section('    function mediaComponentsStatus','    DOM.mainProfileImg.addEventListener'),{DOM:{mainProfileImg:img}});
  assert.equal(x.mediaComponentsStatus(),'checking');img.getAttribute=()=>'/assets/avatar.svg';img.complete=false;assert.equal(x.mediaComponentsStatus(),'checking');img.complete=true;img.naturalWidth=100;assert.equal(x.mediaComponentsStatus(),'ok');img.naturalWidth=0;assert.equal(x.mediaComponentsStatus(),'error');
+});
+
+test('CSP preserves Cloudflare bot detection and analytics while blocking event attributes',()=>{
+ const html=fs.readFileSync('index.html','utf8');assert.match(html,/script-src 'self' 'unsafe-inline' https:\/\/accounts.google.com\/gsi\/client https:\/\/static.cloudflareinsights.com;/);assert.match(html,/script-src-attr 'none'/);assert.doesNotMatch(html,/unsafe-eval|nonce-/);
 });
