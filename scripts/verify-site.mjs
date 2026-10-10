@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+if(process.env.GITHUB_REPOSITORY)assert.equal(process.env.GITHUB_REPOSITORY,'koomean/koomean');
+assert.equal(fs.readFileSync('CNAME','utf8').trim(),'link.koomean.com');
+const html=fs.readFileSync('index.html','utf8');
+for(const text of ['Koo Mean SITE V.2','id="search-input"','id="links-container"','data-app="Koo Mean SITE"','global-maintenance-countdown'])assert.ok(html.includes(text),text);
+for(const text of ['id="feed"','id="article-viewer"','id="applications"'])assert.ok(!html.includes(text),text);
+for(const file of ['maintenance-v1.js','maintenance-v1.css','maintenance-regular.woff2','maintenance-semibold.woff2'])assert.ok(fs.existsSync('assets/'+file),file);
+assert.ok(fs.readFileSync('assets/maintenance-v1.js','utf8').includes("action:'maintenanceStatus'"));
+console.log('PASS SITE repository, custom domain, existing link page and maintenance assets');
