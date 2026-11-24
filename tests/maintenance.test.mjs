@@ -3,22 +3,31 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const source=fs.readFileSync(new URL('../assets/maintenance-v1.js',import.meta.url),'utf8');
-async function setup(initial={active:false}) {
+const html=fs.readFileSync(new URL('../src/index.html',import.meta.url),'utf8');
+async function setup(initial={active:false}, language='th') {
   const nodes=new Map();
-  for(const key of ['title','state','label','foot','refresh','thanks','days','countdown','note','deadline','button'])nodes.set(key,{textContent:'',hidden:false,listeners:{},addEventListener(name,fn){this.listeners[name]=fn;}});
+  for(const key of ['title','state','label','foot','refresh','status','thanks','days','countdown','note','deadline','button'])nodes.set(key,{textContent:'',hidden:false,listeners:{},addEventListener(name,fn){this.listeners[name]=fn;}});
   const overlay={hidden:true,dataset:{app:'Koo Mean SITE',noteTh:'ข้อความเริ่มต้น'},querySelector(selector){return nodes.get(selector.match(/"(.*?)"/)[1]);},setAttribute(){},focus(){this.focused=true;},contains(target){return target===this||[...nodes.values()].includes(target)}};
   const content={tagName:'MAIN',inert:false};
   let time=1000000,state=initial,fail=false,calls=0,reloads=0,status=200;
   const events={},timeouts=new Map(),intervals=new Map();let seq=0;
   const document={hidden:false,body:{children:[overlay,content],style:{}},documentElement:{dataset:{}},getElementById(){return overlay;},addEventListener(name,fn){events[name]=fn;}};
   class ClockDate extends Date {static now(){return time}}
-  vm.runInNewContext(source,{document,navigator:{languages:['th'],onLine:true},Date:ClockDate,Intl,URLSearchParams,AbortSignal,location:{reload(){reloads++;}},window:{addEventListener(name,fn){events[name]=fn;}},setTimeout(fn,ms){const id=++seq;timeouts.set(id,{fn,ms});return id;},clearTimeout(id){timeouts.delete(id);},setInterval(fn,ms){const id=++seq;intervals.set(id,{fn,ms});return id;},clearInterval(id){intervals.delete(id);},async fetch(){calls++;if(fail)throw new Error('Offline');return{status,ok:status===200,headers:{get(){return'60';}},async json(){return{maintenance:state};}};}});
+  vm.runInNewContext(source,{document,navigator:{languages:[language],onLine:true},Date:ClockDate,Intl,URLSearchParams,AbortSignal,location:{reload(){reloads++;}},window:{addEventListener(name,fn){events[name]=fn;}},setTimeout(fn,ms){const id=++seq;timeouts.set(id,{fn,ms});return id;},clearTimeout(id){timeouts.delete(id);},setInterval(fn,ms){const id=++seq;intervals.set(id,{fn,ms});return id;},clearInterval(id){intervals.delete(id);},async fetch(){calls++;if(fail)throw new Error('Offline');return{status,ok:status===200,headers:{get(){return'60';}},async json(){return{maintenance:state};}};}});
   const flush=()=>new Promise(resolve=>setImmediate(resolve));await flush();
   return {overlay,content,nodes,document,events,timeouts,intervals,flush,get calls(){return calls;},get reloads(){return reloads;},setState(value){state=value;},setTime(value){time=value;},setFail(value){fail=value;},setStatus(value){status=value;},async check(){nodes.get('button').listeners.click();await flush();},tick(){[...intervals.values()].filter(x=>x.ms===1000).forEach(x=>x.fn());}};
 }
 test('closing displays a safe note and isolates the underlying page',async()=>{
   const note='<img src=x onerror=alert(1)>';const x=await setup({active:true,note,reopenAt:1060000,serverTime:1000000});
   assert.equal(x.overlay.hidden,false);assert.equal(x.content.inert,true);assert.equal(x.overlay.focused,true);assert.equal(x.nodes.get('note').textContent,note);assert.equal(x.nodes.get('countdown').textContent,'00 : 01 : 00');
+});
+test('the countdown links to the status website in Thai and English',async()=>{
+  assert.match(html,/<a\b(?=[^>]*\bhref="https:\/\/status\.koomean\.com\/")(?=[^>]*\bdata-maintenance="status")[^>]*>/);
+  for(const [language,label] of [['th','ดูสถานะบริการ'],['en-GB','View service status']]){
+    const x=await setup({active:true,reopenAt:1060000},language);
+    assert.equal(x.nodes.get('status').textContent,label);
+    assert.equal(x.overlay.hidden,false);
+  }
 });
 test('server clock correction keeps a clock-skewed visitor on the right countdown',async()=>{
   const x=await setup({active:true,reopenAt:1660000,serverTime:1600000});assert.equal(x.nodes.get('countdown').textContent,'00 : 01 : 00');
